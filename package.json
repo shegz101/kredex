@@ -1,0 +1,17 @@
+{
+  "name": "kredex",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kredex — AI financial autopilot for African micro & small businesses. Built for the Global AI Hackathon Series with Qwen Cloud (Autopilot Agent track).",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build": "npm --prefix client run build && npm --prefix server run build",
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

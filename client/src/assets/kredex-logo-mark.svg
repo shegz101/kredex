@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <path
+    d="M56 28h144c15.5 0 28 12.5 28 28v124c0 15.5-12.5 28-28 28h-39.7l-37.4 27.5c-8.5 6.3-20.6.2-20.6-10.3V208H56c-15.5 0-28-12.5-28-28V56c0-15.5 12.5-28 28-28Z"
+    fill="url(#kredex-bg)"
+  />
+  <path
+    d="M74 76v100"
+    stroke="#FFF8F4"
+    stroke-width="30"
+    stroke-linecap="round"
+  />
+  <path
+    d="M94 128 166 76"
+    stroke="#FFF8F4"
+    stroke-width="30"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M96 130 178 176"
+    stroke="#FFF8F4"
+    stroke-width="30"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M151 91h29M141 128h38M154 165h24"
+    stroke="#FFDAD1"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity=".9"
+  />
+  <circle cx="100" cy="128" r="12" fill="#FFDAD1" />
+  <path
+    d="M173.5 65.5c17.4 22.8 24.3 55.8 18 85.5-6.5 30.9-26.7 55.5-55.5 67.9l23.9-10.9H200c15.5 0 28-12.5 28-28V56c0-15.5-12.5-28-28-28h-55c10.8 8.7 20.2 21 28.5 37.5Z"
+    fill="#1C1917"
+    opacity=".08"
+  />
+  <defs>
+    <linearGradient id="kredex-bg" x1="46" y1="36" x2="221" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F15A36" />
+      <stop offset="1" stop-color="#D83A18" />
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,69 @@
+import express from "express";
+import cors from "cors";
+import cron from "node-cron";
+import { env } from "./config/env.js";
+import { connectDB } from "./lib/db.js";
+import authRoutes from "./routes/auth.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import autopilotRoutes from "./routes/autopilot.routes.js";
+import receiptRoutes from "./routes/receipt.routes.js";
+import pnlRoutes from "./routes/pnl.routes.js";
+import { autopilotJobs } from "./services/autopilot.js";
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Health check — a simple "is the server alive?" endpoint.
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, service: "kredex-server", time: new Date().toISOString() });
+});
+
+// Auth: register / login / me
+app.use("/api/auth", authRoutes);
+
+// Chat: the AI agent spine (SSE streaming)
+app.use("/api/chat", chatRoutes);
+
+// Dashboard: live aggregated shop data
+app.use("/api/dashboard", dashboardRoutes);
+
+// Autopilot: background scanners + human-in-the-loop approval feed
+app.use("/api/autopilot", autopilotRoutes);
+
+// Receipt OCR: photo -> Qwen vision -> structured items
+app.use("/api/receipt", receiptRoutes);
+
+// P&L: real profit + a Qwen-written "are you making money?" verdict
+app.use("/api/pnl", pnlRoutes);
+
+/**
+ * The autopilot's heartbeat. These run server-wide on a schedule and raise
+ * approvals for every shop. (For the demo, POST /api/autopilot/scan triggers
+ * the same scanners on demand so you don't have to wait for the clock.)
+ */
+function scheduleAutopilot() {
+  cron.schedule("0 8 * * *", autopilotJobs.overdue); // daily 08:00 — overdue debts
+  cron.schedule("0 */6 * * *", autopilotJobs.lowStock); // every 6h — low stock
+  cron.schedule("0 21 * * *", autopilotJobs.eod); // daily 21:00 — end-of-day summary
+  console.log("🛰️  Autopilot scheduled (overdue 08:00 · low-stock /6h · EOD 21:00)");
+}
+
+async function start() {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error("⚠️  Could not connect to MongoDB — starting anyway so /api/health works.");
+    console.error("   ", (err as Error).message);
+  }
+
+  scheduleAutopilot();
+
+  app.listen(env.PORT, () => {
+    console.log(`🚀 Kredex server on http://localhost:${env.PORT}`);
+  });
+}
+
+start();
