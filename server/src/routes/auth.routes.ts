@@ -51,6 +51,26 @@ router.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/auth/email-available?email=...
+ * Lightweight check so the signup form can show "available / taken" as you type.
+ */
+router.get("/email-available", async (req, res) => {
+  try {
+    const email = String(req.query.email ?? "").trim().toLowerCase();
+    const valid = z.string().email().safeParse(email).success;
+    if (!valid) {
+      res.json({ valid: false, available: false });
+      return;
+    }
+    const exists = await UserModel.findOne({ email }).select("_id");
+    res.json({ valid: true, available: !exists });
+  } catch (err) {
+    console.error("email-available error:", err);
+    res.status(500).json({ error: "Check failed" });
+  }
+});
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
@@ -73,13 +93,13 @@ router.post("/login", async (req, res) => {
 
     const user = await UserModel.findOne({ email });
     if (!user) {
-      res.status(401).json({ error: "Invalid email or password" });
+      res.status(404).json({ error: "We couldn't find an account with that email." });
       return;
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) {
-      res.status(401).json({ error: "Invalid email or password" });
+      res.status(401).json({ error: "That password isn't correct." });
       return;
     }
 
@@ -98,6 +118,38 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("login error:", err);
     res.status(500).json({ error: "Something went wrong signing in" });
+  }
+});
+
+const resetSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+/**
+ * POST /api/auth/reset-password
+ * DEMO-GRADE reset: sets a new password for a known email directly. A production
+ * version would email a one-time reset link/token instead of trusting the caller.
+ */
+router.post("/reset-password", async (req, res) => {
+  try {
+    const parsed = resetSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Enter a valid email and a password of at least 6 characters" });
+      return;
+    }
+    const { email, password } = parsed.data;
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      res.status(404).json({ error: "We couldn't find an account with that email." });
+      return;
+    }
+    user.passwordHash = await bcrypt.hash(password, 10);
+    await user.save();
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("reset error:", err);
+    res.status(500).json({ error: "Something went wrong resetting your password" });
   }
 });
 

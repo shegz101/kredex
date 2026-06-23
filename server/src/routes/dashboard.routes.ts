@@ -7,6 +7,7 @@ import {
   TransactionModel,
 } from "../models/index.js";
 import { isLow } from "../lib/stock.js";
+import { fmtMoney } from "../lib/money.js";
 
 const router = Router();
 
@@ -41,7 +42,7 @@ router.get("/", requireAuth, async (req, res) => {
     }
 
     const [debts, items, txns] = await Promise.all([
-      DebtModel.find({ shopId, status: { $ne: "paid" } }).populate("customerId", "name"),
+      DebtModel.find({ shopId, status: { $ne: "paid" } }).populate("customerId", "name phone"),
       InventoryItemModel.find({ shopId }),
       TransactionModel.find({ shopId }).sort({ occurredAt: -1 }).limit(40),
     ]);
@@ -85,12 +86,14 @@ router.get("/", requireAuth, async (req, res) => {
       .map((d) => {
         const c = d.customerId as any;
         const name = c?.name ?? "Customer";
+        const balance = balanceOf(d);
         let note = "No due date";
         if (d.dueDate) {
           const diff = Math.round((d.dueDate.getTime() - now.getTime()) / 86_400_000);
           note = diff < 0 ? `${-diff} day${-diff === 1 ? "" : "s"} overdue` : diff === 0 ? "Due today" : diff === 1 ? "Due tomorrow" : `Due in ${diff} days`;
         }
-        return { id: String(d._id), name, amount: balanceOf(d), note, initials: initialsOf(name) };
+        const draft = `Good day ${name}, hope business dey move. Just a gentle reminder say ${fmtMoney(balance, shop.currency)} dey outstanding from your last purchase. Abeg settle when you fit. Thank you! 🙏`;
+        return { id: String(d._id), name, amount: balance, note, initials: initialsOf(name), phone: c?.phone ?? null, draft };
       });
 
     // --- recent activity (from transactions) ---
@@ -98,7 +101,7 @@ router.get("/", requireAuth, async (req, res) => {
       t.type === "purchase" ? "zinc" : t.type === "expense" ? "zinc" : t.paymentMethod === "credit" ? "orange" : "green";
     const statusFor = (t: any) =>
       t.type === "purchase" ? "Stock" : t.type === "expense" ? "Expense" : t.paymentMethod === "credit" ? "Credit" : t.paymentMethod === "transfer" ? "Transfer" : "Cash";
-    const activity = txns.slice(0, 6).map((t) => {
+    const activity = txns.slice(0, 25).map((t) => {
       const lead = t.items?.[0];
       const title =
         t.type === "purchase"
@@ -115,12 +118,15 @@ router.get("/", requireAuth, async (req, res) => {
       };
     });
 
-    // --- a simple business-health score (0-100) ---
+    // --- a simple business-health score (0-100), or null for a brand-new shop ---
+    const hasData = txns.length > 0 || items.length > 0 || debts.length > 0;
     const collectionPenalty = Math.min(30, overdue.filter((o) => o.note.includes("overdue")).length * 10);
     const stockPenalty = Math.min(15, lowStock.length * 5);
     const activityBonus = txns.length > 0 ? 15 : 0;
-    const health = Math.max(0, Math.min(100, 70 + activityBonus - collectionPenalty - stockPenalty));
-    const healthLabel = health >= 80 ? "Strong" : health >= 60 ? "Good" : health >= 40 ? "Watch" : "At risk";
+    const health = hasData ? Math.max(0, Math.min(100, 70 + activityBonus - collectionPenalty - stockPenalty)) : null;
+    const healthLabel = !hasData
+      ? "No data yet"
+      : health! >= 80 ? "Strong" : health! >= 60 ? "Good" : health! >= 40 ? "Watch" : "At risk";
 
     res.json({
       shop: { name: shop.name, location: shop.type ?? "", initials: initialsOf(shop.name), currency: shop.currency ?? "NGN" },
@@ -141,6 +147,54 @@ router.get("/", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("dashboard error:", err);
     res.status(500).json({ error: "Failed to load dashboard" });
+  }
+});
+
+/**
+ * GET /api/dashboard/revenue?range=7d|30d|12m
+ * Sales revenue bucketed for the chart, for the range the owner picks.
+ */
+router.get("/revenue", requireAuth, async (req, res) => {
+  try {
+    const shopId = req.shopId!;
+    const range = String(req.query.range ?? "7d");
+    const now = new Date();
+    const series: number[] = [];
+    let labels: string[] = [];
+
+    if (range === "12m") {
+      const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      const sales = await TransactionModel.find({ shopId, type: "sale", occurredAt: { $gte: start } });
+      for (let m = 11; m >= 0; m--) {
+        const ms = new Date(now.getFullYear(), now.getMonth() - m, 1);
+        const me = new Date(now.getFullYear(), now.getMonth() - m + 1, 1);
+        series.push(sales.filter((s) => s.occurredAt >= ms && s.occurredAt < me).reduce((a, b) => a + b.total, 0));
+        labels.push(ms.toLocaleDateString("en-US", { month: "short" }));
+      }
+    } else {
+      const days = range === "30d" ? 30 : 7;
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(now.getDate() - (days - 1));
+      const sales = await TransactionModel.find({ shopId, type: "sale", occurredAt: { $gte: start } });
+      const dayLabels: string[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const day = new Date(now);
+        day.setHours(0, 0, 0, 0);
+        day.setDate(now.getDate() - i);
+        const next = new Date(day);
+        next.setDate(day.getDate() + 1);
+        series.push(sales.filter((s) => s.occurredAt >= day && s.occurredAt < next).reduce((a, b) => a + b.total, 0));
+        dayLabels.push(day.toLocaleDateString("en-US", days === 7 ? { weekday: "short" } : { month: "short", day: "numeric" }));
+      }
+      // for 30 days, only show ~6 evenly-spaced labels so they don't crowd
+      labels = days === 7 ? dayLabels : [0, 6, 12, 18, 24, 29].map((idx) => dayLabels[idx]);
+    }
+
+    res.json({ series, labels, total: series.reduce((a, b) => a + b, 0), range });
+  } catch (err) {
+    console.error("revenue error:", err);
+    res.status(500).json({ error: "Failed to load revenue" });
   }
 });
 

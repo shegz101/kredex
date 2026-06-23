@@ -4,6 +4,8 @@ import {
   DebtModel,
   InventoryItemModel,
   TransactionModel,
+  InvoiceModel,
+  ReminderModel,
 } from "../models/index.js";
 import { isLow } from "../lib/stock.js";
 
@@ -183,6 +185,65 @@ export const toolDefs: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "create_invoice",
+      description:
+        "Create a professional invoice to bill a customer. Use when the owner says 'invoice/bill X for ...'. unitPrice defaults to the item's sell price if not given.",
+      parameters: {
+        type: "object",
+        properties: {
+          customerName: { type: "string" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                quantity: { type: "number" },
+                unitPrice: { type: "number" },
+              },
+              required: ["name", "quantity"],
+            },
+          },
+          dueDate: { type: "string", description: "ISO date or a real date like 'July 5' (optional)" },
+        },
+        required: ["customerName", "items"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "save_customer_phone",
+      description: "Save or update a customer's phone number so the owner can send them WhatsApp reminders.",
+      parameters: {
+        type: "object",
+        properties: {
+          customerName: { type: "string" },
+          phone: { type: "string" },
+        },
+        required: ["customerName", "phone"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "set_reminder",
+      description:
+        "Set a personal reminder for the owner (e.g. 'remind me to call Alhaji on Friday to supply rice', 'pay rent on the 30th', 'I borrowed from Musa, pay back Friday'). Kredex will surface it when due. Resolve relative dates like 'Friday'/'tomorrow' to an ISO date — today's date is in your context.",
+      parameters: {
+        type: "object",
+        properties: {
+          text: { type: "string", description: "what to remind the owner about" },
+          dueDate: { type: "string", description: "ISO date or datetime, e.g. 2026-06-27 or 2026-06-27T09:00" },
+        },
+        required: ["text", "dueDate"],
+      },
+    },
+  },
 ];
 
 // ---------- executors (what actually runs) ----------
@@ -308,18 +369,20 @@ const executors: Record<string, Executor> = {
       });
       if (!customer) return { error: `No customer named "${args.customerName}".` };
       const owed = await totalOwedByCustomer(shopId, String(customer._id));
-      return { customer: customer.name, owes: owed };
+      const theirs = await DebtModel.find({ shopId, customerId: customer._id, status: { $ne: "paid" } }).sort({ dueDate: 1 });
+      const earliest = theirs.find((d) => d.amount - d.payments.reduce((s, p) => s + p.amount, 0) > 0);
+      return { customer: customer.name, owes: owed, due: dueText(earliest?.dueDate) };
     }
 
-    const debts = await DebtModel.find({ shopId, status: { $ne: "paid" } }).populate("customerId", "name");
-    const byCustomer: Record<string, { name: string; owes: number; dueDate: Date | null }> = {};
+    const debts = await DebtModel.find({ shopId, status: { $ne: "paid" } }).sort({ dueDate: 1 }).populate("customerId", "name");
+    const byCustomer: Record<string, { name: string; owes: number; due: string }> = {};
     let total = 0;
     for (const d of debts) {
       const balance = d.amount - d.payments.reduce((s, p) => s + p.amount, 0);
       if (balance <= 0) continue;
       const c = d.customerId as any;
       const key = String(c?._id ?? "unknown");
-      if (!byCustomer[key]) byCustomer[key] = { name: c?.name ?? "Unknown", owes: 0, dueDate: d.dueDate ?? null };
+      if (!byCustomer[key]) byCustomer[key] = { name: c?.name ?? "Unknown", owes: 0, due: dueText(d.dueDate) };
       byCustomer[key].owes += balance;
       total += balance;
     }
@@ -330,11 +393,25 @@ const executors: Record<string, Executor> = {
     if (args.itemName) {
       const item = await findItem(shopId, args.itemName);
       if (!item) return { error: `No item named "${args.itemName}" in stock.` };
-      return { name: item.name, quantity: item.quantity, unit: item.unit, low: isLow(item) };
+      return {
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        sellPrice: item.sellPrice,
+        costPrice: item.costPrice,
+        low: isLow(item),
+      };
     }
     const items = await InventoryItemModel.find({ shopId }).sort({ name: 1 });
     return {
-      items: items.map((i) => ({ name: i.name, quantity: i.quantity, unit: i.unit, low: isLow(i) })),
+      items: items.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        sellPrice: i.sellPrice,
+        costPrice: i.costPrice,
+        low: isLow(i),
+      })),
       lowStock: items.filter((i) => isLow(i)).map((i) => i.name),
     };
   },
@@ -365,6 +442,55 @@ const executors: Record<string, Executor> = {
     const { description, amount } = args;
     await TransactionModel.create({ shopId, type: "expense", total: amount, note: description, items: [] });
     return { ok: true, expense: description, amount };
+  },
+
+  async create_invoice(args, { shopId }) {
+    const { customerName, items, dueDate } = args as {
+      customerName: string;
+      items: Array<{ name: string; quantity: number; unitPrice?: number }>;
+      dueDate?: string;
+    };
+    const lines = [];
+    for (const it of items) {
+      let unitPrice = typeof it.unitPrice === "number" ? it.unitPrice : 0;
+      if (!unitPrice) {
+        const item = await findItem(shopId, it.name);
+        if (item) unitPrice = item.sellPrice;
+      }
+      lines.push({ name: it.name, quantity: it.quantity, unitPrice });
+    }
+    const total = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+    const count = await InvoiceModel.countDocuments({ shopId });
+    const number = `KRD-${String(count + 1).padStart(3, "0")}`;
+    const customer = await CustomerModel.findOne({
+      shopId,
+      name: new RegExp(`^${escapeRegex(customerName)}$`, "i"),
+    });
+    await InvoiceModel.create({
+      shopId,
+      number,
+      customerName,
+      customerId: customer?._id,
+      items: lines,
+      total,
+      dueDate: parseDate(dueDate),
+    });
+    return { ok: true, number, customer: customerName, total, items: lines.length };
+  },
+
+  async save_customer_phone(args, { shopId }) {
+    const { customerName, phone } = args;
+    const customer = await findOrCreateCustomer(shopId, customerName);
+    customer.phone = String(phone);
+    await customer.save();
+    return { ok: true, customer: customer.name, phone: customer.phone };
+  },
+
+  async set_reminder(args, { shopId }) {
+    const { text, dueDate } = args;
+    const due = parseDate(dueDate) ?? new Date(Date.now() + 86_400_000); // default: tomorrow
+    const reminder = await ReminderModel.create({ shopId, text, dueAt: due });
+    return { ok: true, reminder: reminder.text, dueAt: reminder.dueAt, due: dueText(reminder.dueAt) };
   },
 };
 
@@ -405,7 +531,20 @@ async function totalOwedByCustomer(shopId: string, customerId: string) {
 function parseDate(input?: string): Date | undefined {
   if (!input) return undefined;
   const d = new Date(input);
-  return isNaN(d.getTime()) ? undefined : d;
+  if (isNaN(d.getTime())) return undefined;
+  // V8 defaults a year-less date (e.g. "June 27") to 2001 — pin it to this year.
+  if (!/\d{4}/.test(input)) d.setFullYear(new Date().getFullYear());
+  return d;
+}
+
+/** Human due status relative to NOW so the agent says "overdue" when a date has passed. */
+function dueText(d?: Date | null): string {
+  if (!d) return "no due date set";
+  const diff = Math.round((new Date(d).getTime() - Date.now()) / 86_400_000);
+  if (diff < 0) return `${-diff} day${-diff === 1 ? "" : "s"} overdue`;
+  if (diff === 0) return "due today";
+  if (diff === 1) return "due tomorrow";
+  return `due in ${diff} days`;
 }
 
 // ---------- dispatcher ----------

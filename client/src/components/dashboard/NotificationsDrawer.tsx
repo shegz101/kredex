@@ -5,11 +5,12 @@ import { api } from '../../lib/api'
 import type { Approval } from '../../lib/api'
 
 const KIND_META: Record<Approval['kind'], { label: string; icon: string }> = {
+  reminder: { label: 'Reminders', icon: 'solar:bell-bing-linear' },
   overdue_debt: { label: 'Debt reminders', icon: 'solar:wallet-money-linear' },
   low_stock: { label: 'Low stock alerts', icon: 'solar:box-linear' },
   eod_summary: { label: 'Daily summaries', icon: 'solar:chart-2-linear' },
 }
-const ORDER: Approval['kind'][] = ['overdue_debt', 'low_stock', 'eod_summary']
+const ORDER: Approval['kind'][] = ['reminder', 'overdue_debt', 'low_stock', 'eod_summary']
 
 function timeAgo(iso?: string): string {
   if (!iso) return ''

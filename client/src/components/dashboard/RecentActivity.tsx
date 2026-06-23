@@ -18,7 +18,7 @@ const toneStyles: Record<string, string> = {
 
 export default function RecentActivity({ activity }: { activity: DashboardData['activity'] }) {
   return (
-    <section className="flex flex-col rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+    <section className="relative flex flex-col rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Recent activity</h2>
         <button type="button" className="text-xs font-medium text-zinc-400 hover:text-[#EB4A26] transition-colors">
@@ -32,7 +32,7 @@ export default function RecentActivity({ activity }: { activity: DashboardData['
           <p className="text-sm text-zinc-400">No activity yet. Log a sale in Chat to get started.</p>
         </div>
       ) : (
-        <div className="mt-4 flex flex-col">
+        <div className="no-scrollbar mt-4 flex flex-col overflow-y-auto lg:absolute lg:inset-x-6 lg:bottom-6 lg:top-[4.75rem] lg:mt-0">
           {activity.map((it, i) => (
             <div
               key={it.id}

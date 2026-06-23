@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { ApprovalModel } from "../models/index.js";
+import { ApprovalModel, ReminderModel } from "../models/index.js";
 import { scanShop } from "../services/autopilot.js";
 
 const router = Router();
@@ -68,6 +68,8 @@ function resultFor(kind: string, payload: Record<string, unknown>): string {
       return `Reminder sent to ${payload.customerName ?? "customer"} on WhatsApp`;
     case "low_stock":
       return `${payload.itemName ?? "Item"} added to your restock list`;
+    case "reminder":
+      return "Marked done";
     default:
       return "Reviewed";
   }
@@ -86,6 +88,11 @@ router.post("/approvals/:id/approve", requireAuth, async (req, res) => {
       approval.resolvedAt = new Date();
       approval.result = resultFor(approval.kind, (approval.payload ?? {}) as Record<string, unknown>);
       await approval.save();
+      // a reminder being approved means it's handled — mark it done
+      if (approval.kind === "reminder") {
+        const reminderId = (approval.payload as { reminderId?: string })?.reminderId;
+        if (reminderId) await ReminderModel.updateOne({ _id: reminderId, shopId: req.shopId! }, { status: "done", doneAt: new Date() });
+      }
     }
     res.json({ approval });
   } catch (err) {

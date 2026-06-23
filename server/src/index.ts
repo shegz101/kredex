@@ -9,6 +9,11 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import autopilotRoutes from "./routes/autopilot.routes.js";
 import receiptRoutes from "./routes/receipt.routes.js";
 import pnlRoutes from "./routes/pnl.routes.js";
+import invoicesRoutes from "./routes/invoices.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
+import remindersRoutes from "./routes/reminders.routes.js";
+import voiceRoutes from "./routes/voice.routes.js";
+import opportunitiesRoutes from "./routes/opportunities.routes.js";
 import { autopilotJobs } from "./services/autopilot.js";
 
 const app = express();
@@ -39,6 +44,21 @@ app.use("/api/receipt", receiptRoutes);
 // P&L: real profit + a Qwen-written "are you making money?" verdict
 app.use("/api/pnl", pnlRoutes);
 
+// Invoices: create, list, mark paid, download PDF
+app.use("/api/invoices", invoicesRoutes);
+
+// Settings: shop profile, low-stock default, change password
+app.use("/api/settings", settingsRoutes);
+
+// Reminders: personal nudges the autopilot surfaces when due
+app.use("/api/reminders", remindersRoutes);
+
+// Voice: speech-to-text (speak-to-log)
+app.use("/api/voice", voiceRoutes);
+
+// Opportunity Scout: location-aware loans, grants, programs, events
+app.use("/api/opportunities", opportunitiesRoutes);
+
 /**
  * The autopilot's heartbeat. These run server-wide on a schedule and raise
  * approvals for every shop. (For the demo, POST /api/autopilot/scan triggers
@@ -48,7 +68,8 @@ function scheduleAutopilot() {
   cron.schedule("0 8 * * *", autopilotJobs.overdue); // daily 08:00 — overdue debts
   cron.schedule("0 */6 * * *", autopilotJobs.lowStock); // every 6h — low stock
   cron.schedule("0 21 * * *", autopilotJobs.eod); // daily 21:00 — end-of-day summary
-  console.log("🛰️  Autopilot scheduled (overdue 08:00 · low-stock /6h · EOD 21:00)");
+  cron.schedule("*/10 * * * *", autopilotJobs.reminders); // every 10 min — due reminders
+  console.log("🛰️  Autopilot scheduled (overdue 08:00 · low-stock /6h · EOD 21:00 · reminders /10m)");
 }
 
 async function start() {

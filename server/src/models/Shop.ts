@@ -14,6 +14,7 @@ const shopSchema = new Schema(
     type: { type: String, trim: true }, // e.g. "provision store", "boutique"
     currency: { type: String, default: "NGN" },
     lowStockThreshold: { type: Number, default: 5 }, // default reorder level for items without their own
+    location: { type: String, trim: true }, // e.g. "Yaba, Lagos, Nigeria" — powers the Opportunity Scout
 
   },
   { timestamps: true }

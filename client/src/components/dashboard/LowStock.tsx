@@ -13,7 +13,7 @@ export default function LowStock({ lowStock }: { lowStock: DashboardData['lowSto
         <p className="py-8 text-center text-sm text-zinc-400">Everything's well stocked.</p>
       ) : (
         <>
-          <div className="mt-4 flex flex-col gap-2">
+          <div className="no-scrollbar mt-4 flex max-h-[12.5rem] flex-col gap-2 overflow-y-auto">
             {lowStock.map((s) => (
               <div
                 key={s.id}

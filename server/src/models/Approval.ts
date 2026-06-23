@@ -11,7 +11,7 @@ import { Schema, model, InferSchemaType } from "mongoose";
 const approvalSchema = new Schema(
   {
     shopId: { type: Schema.Types.ObjectId, ref: "Shop", required: true, index: true },
-    kind: { type: String, enum: ["overdue_debt", "low_stock", "eod_summary"], required: true },
+    kind: { type: String, enum: ["overdue_debt", "low_stock", "eod_summary", "reminder"], required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
     draft: { type: String }, // e.g. a ready-to-send reminder message

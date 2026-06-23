@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { ShopModel, TransactionModel, InventoryItemModel } from "../models/index.js";
 import { qwen, MODELS } from "../lib/qwen.js";
+import { fmtMoney } from "../lib/money.js";
 
 const router = Router();
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString();
@@ -106,8 +107,8 @@ router.get("/", requireAuth, async (req, res) => {
       console.error("pnl narrative failed:", e);
       narrative =
         netProfit > 0
-          ? `You're in the green this month — ${naira(netProfit)} net profit on ${naira(revenue)} in sales.`
-          : `You're not in profit yet this month. Sales are ${naira(revenue)} but costs are eating it. Push your higher-margin items.`;
+          ? `You're in the green this month — ${fmtMoney(netProfit, currency)} net profit on ${fmtMoney(revenue, currency)} in sales.`
+          : `You're not in profit yet this month. Sales are ${fmtMoney(revenue, currency)} but costs are eating it. Push your higher-margin items.`;
     }
 
     res.json({

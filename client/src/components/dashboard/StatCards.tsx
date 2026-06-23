@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { DashboardData } from '../../lib/api'
-import { naira, nairaCompact } from '../../lib/format'
+import { useMoney } from '../../lib/useMoney'
 
 type Variant = 'orange' | 'dark' | 'white'
 
@@ -74,6 +74,7 @@ function StatCard({ variant, icon, label, value, outOf, sub, up }: StatCardProps
 }
 
 export default function StatCards({ stats }: { stats: DashboardData['stats'] }) {
+  const { money, moneyCompact } = useMoney()
   const delta = stats.revenueDeltaPct
   const revenueSub =
     delta === null ? 'this month' : `${delta >= 0 ? '+' : ''}${delta}% vs last month`
@@ -84,14 +85,14 @@ export default function StatCards({ stats }: { stats: DashboardData['stats'] }) 
         variant="orange"
         icon="solar:wallet-money-linear"
         label="Total owed to you"
-        value={naira(stats.owedTotal)}
+        value={money(stats.owedTotal)}
         sub={`${stats.owedCustomers} customer${stats.owedCustomers === 1 ? '' : 's'}`}
       />
       <StatCard
         variant="dark"
         icon="solar:chart-2-linear"
         label="Revenue this month"
-        value={nairaCompact(stats.revenueThisMonth)}
+        value={moneyCompact(stats.revenueThisMonth)}
         sub={revenueSub}
         up={delta !== null && delta >= 0}
       />
@@ -99,8 +100,8 @@ export default function StatCards({ stats }: { stats: DashboardData['stats'] }) 
         variant="white"
         icon="solar:heart-pulse-linear"
         label="Business health"
-        value={String(stats.health)}
-        outOf="/100"
+        value={stats.health === null ? '—' : String(stats.health)}
+        outOf={stats.health === null ? undefined : '/100'}
         sub={stats.healthLabel}
       />
     </div>

@@ -1,37 +1,38 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import AuthLayout, { fieldClass, labelClass, submitClass } from '../components/AuthLayout'
-import { useAuth } from '../auth/AuthContext'
+import { api } from '../lib/api'
 import { useToast } from '../components/Toast'
 
-interface LoginForm {
+interface ResetForm {
   email: string
   password: string
+  confirm: string
 }
 
-export default function Login() {
-  const { login } = useAuth()
+export default function ForgotPassword() {
   const toast = useToast()
   const navigate = useNavigate()
-  const location = useLocation()
-  const dest = (location.state as { from?: string } | null)?.from || '/dashboard'
-
-  const [form, setForm] = useState<LoginForm>({ email: '', password: '' })
+  const [form, setForm] = useState<ResetForm>({ email: '', password: '', confirm: '' })
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const set = (k: keyof LoginForm) => (e: ChangeEvent<HTMLInputElement>) =>
+  const set = (k: keyof ResetForm) => (e: ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (form.password !== form.confirm) {
+      toast.error('The two passwords do not match.')
+      return
+    }
     setBusy(true)
     try {
-      await login(form)
-      toast.success('You’re signed in.', 'Welcome back')
-      navigate(dest, { replace: true })
+      await api.resetPassword({ email: form.email, password: form.password })
+      toast.success('Your password has been changed. Sign in with it now.', 'Password reset')
+      navigate('/login', { replace: true })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -41,14 +42,14 @@ export default function Login() {
 
   return (
     <AuthLayout
-      eyebrow="Welcome back"
-      title="Sign in to your shop"
-      subtitle="Pick up exactly where you left off."
+      eyebrow="Account recovery"
+      title="Reset your password"
+      subtitle="Enter your email and a new password to get back into your shop."
       footer={
         <>
-          New to Kredex?{' '}
-          <Link to="/register" className="font-semibold text-[#EB4A26] hover:underline">
-            Create your shop
+          Remembered it?{' '}
+          <Link to="/login" className="font-semibold text-[#EB4A26] hover:underline">
+            Back to sign in
           </Link>
         </>
       }
@@ -61,15 +62,10 @@ export default function Login() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between">
-            <label className={labelClass} htmlFor="password">Password</label>
-            <Link to="/forgot-password" className="mb-1.5 text-xs font-medium text-[#EB4A26] hover:underline">
-              Forgot password?
-            </Link>
-          </div>
+          <label className={labelClass} htmlFor="password">New password</label>
           <div className="relative">
-            <input id="password" type={show ? 'text' : 'password'} required autoComplete="current-password"
-              className={fieldClass} placeholder="••••••••" value={form.password} onChange={set('password')} />
+            <input id="password" type={show ? 'text' : 'password'} required minLength={6} autoComplete="new-password"
+              className={fieldClass} placeholder="At least 6 characters" value={form.password} onChange={set('password')} />
             <button type="button" onClick={() => setShow((s) => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
               aria-label={show ? 'Hide password' : 'Show password'}>
@@ -78,8 +74,14 @@ export default function Login() {
           </div>
         </div>
 
+        <div>
+          <label className={labelClass} htmlFor="confirm">Confirm new password</label>
+          <input id="confirm" type={show ? 'text' : 'password'} required minLength={6} autoComplete="new-password"
+            className={fieldClass} placeholder="Re-type the password" value={form.confirm} onChange={set('confirm')} />
+        </div>
+
         <button type="submit" disabled={busy} className={`${submitClass} mt-2`}>
-          {busy ? 'Signing in…' : 'Sign in'}
+          {busy ? 'Resetting…' : 'Reset password'}
           {!busy && <Icon icon="solar:arrow-right-linear" width="18" />}
         </button>
       </form>

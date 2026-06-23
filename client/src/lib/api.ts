@@ -46,7 +46,7 @@ export interface DashboardData {
     owedCustomers: number
     revenueThisMonth: number
     revenueDeltaPct: number | null
-    health: number
+    health: number | null
     healthLabel: string
   }
   revenueSeries: number[]
@@ -60,13 +60,21 @@ export interface DashboardData {
     tone: string
     time: string
   }>
-  overdue: Array<{ id: string; name: string; amount: number; note: string; initials: string }>
+  overdue: Array<{ id: string; name: string; amount: number; note: string; initials: string; phone?: string | null; draft?: string }>
   lowStock: Array<{ id: string; name: string; qty: string }>
+}
+
+export interface Reminder {
+  _id: string
+  text: string
+  dueAt: string
+  status: 'pending' | 'done' | 'dismissed'
+  createdAt: string
 }
 
 export interface Approval {
   _id: string
-  kind: 'overdue_debt' | 'low_stock' | 'eod_summary'
+  kind: 'overdue_debt' | 'low_stock' | 'eod_summary' | 'reminder'
   title: string
   body: string
   draft?: string
@@ -109,6 +117,56 @@ export interface PnlData {
   netMargin: number
   items: PnlItem[]
   narrative: string
+}
+
+export interface InvoiceItem {
+  name: string
+  quantity: number
+  unitPrice: number
+}
+export interface Invoice {
+  _id: string
+  number: string
+  customerName: string
+  items: InvoiceItem[]
+  total: number
+  status: 'unpaid' | 'paid'
+  notes?: string
+  dueDate?: string
+  createdAt: string
+}
+
+export interface ShopSettings {
+  name: string
+  type: string
+  currency: string
+  lowStockThreshold: number
+  location: string
+}
+
+export interface Opportunity {
+  title: string
+  type: string
+  organization: string
+  summary: string
+  eligibility: string
+  amount: string
+  deadline: string
+  howToApply: string
+  locationFit: string
+  sourceUrl?: string
+}
+export interface SettingsData {
+  shop: ShopSettings
+  user: { name: string; email: string }
+}
+
+export interface ChatHistoryMessage {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  intent?: string
+  actions?: { name: string; result: unknown }[]
 }
 
 export interface ReceiptItem {
@@ -164,9 +222,33 @@ async function request<T>(path: string, { method = 'GET', body, auth = true }: R
 export const api = {
   register: (body: RegisterInput) => request<AuthResponse>('/auth/register', { method: 'POST', body, auth: false }),
   login: (body: LoginInput) => request<AuthResponse>('/auth/login', { method: 'POST', body, auth: false }),
+  resetPassword: (body: { email: string; password: string }) =>
+    request<{ ok: boolean }>('/auth/reset-password', { method: 'POST', body, auth: false }),
+  emailAvailable: (email: string) =>
+    request<{ valid: boolean; available: boolean }>(`/auth/email-available?email=${encodeURIComponent(email)}`, { auth: false }),
   me: () => request<MeResponse>('/auth/me'),
   dashboard: () => request<DashboardData>('/dashboard'),
   pnl: () => request<PnlData>('/pnl'),
+  revenue: (range: string) =>
+    request<{ series: number[]; labels: string[]; total: number; range: string }>(`/dashboard/revenue?range=${range}`),
+  chatHistory: () => request<{ messages: ChatHistoryMessage[] }>('/chat/history'),
+  saveMessage: (role: 'user' | 'assistant', text: string) =>
+    request<{ ok: boolean }>('/chat/message', { method: 'POST', body: { role, text } }),
+  settings: () => request<SettingsData>('/settings'),
+  updateShop: (body: Partial<ShopSettings>) => request<{ shop: ShopSettings }>('/settings/shop', { method: 'PATCH', body }),
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
+    request<{ ok: boolean }>('/settings/password', { method: 'POST', body }),
+  findOpportunities: (body: { categories?: string[]; query?: string }) =>
+    request<{ location: string; opportunities: Opportunity[] }>('/opportunities', { method: 'POST', body }),
+  reminders: () => request<{ reminders: Reminder[] }>('/reminders'),
+  createReminder: (body: { text: string; dueAt: string }) => request<{ reminder: Reminder }>('/reminders', { method: 'POST', body }),
+  setReminderStatus: (id: string, status: 'pending' | 'done' | 'dismissed') =>
+    request<{ reminder: Reminder }>(`/reminders/${id}`, { method: 'PATCH', body: { status } }),
+  invoices: () => request<{ invoices: Invoice[] }>('/invoices'),
+  createInvoice: (body: { customerName: string; items: InvoiceItem[]; dueDate?: string | null; notes?: string | null }) =>
+    request<{ invoice: Invoice }>('/invoices', { method: 'POST', body }),
+  setInvoiceStatus: (id: string, status: 'paid' | 'unpaid') =>
+    request<{ invoice: Invoice }>(`/invoices/${id}`, { method: 'PATCH', body: { status } }),
   approvals: () => request<ApprovalsResponse>('/autopilot/approvals'),
   notifications: () => request<NotificationsResponse>('/autopilot/notifications'),
   markRead: (id: string) => request<{ unread: number }>('/autopilot/notifications/read', { method: 'POST', body: { id } }),
@@ -176,6 +258,48 @@ export const api = {
   dismissApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/dismiss`, { method: 'POST' }),
   commitReceipt: (body: { supplier: string | null; items: ReceiptItem[] }) =>
     request<{ ok: boolean; logged: number }>('/receipt/commit', { method: 'POST', body }),
+}
+
+/** Download an invoice PDF (blob fetch so we can send the auth header, then save). */
+export async function downloadInvoicePdf(id: string, number: string): Promise<void> {
+  const res = await fetch(`/api/invoices/${id}/pdf`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  })
+  if (!res.ok) throw new Error('Failed to download the PDF')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${number}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+/** Text-to-speech: get spoken audio (WAV blob) for a reply. */
+export async function speakText(text: string): Promise<Blob> {
+  const res = await fetch('/api/voice/speak', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify({ text }),
+  })
+  if (!res.ok) throw new Error('Could not generate voice')
+  return await res.blob()
+}
+
+/** Send recorded audio (WAV) and get back the transcription. */
+export async function transcribeAudio(wav: Blob): Promise<string> {
+  const fd = new FormData()
+  fd.append('audio', wav, 'audio.wav')
+  const res = await fetch('/api/voice/transcribe', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: fd,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error((data as { error?: string }).error || 'Transcription failed')
+  return (data as { text: string }).text
 }
 
 /** Upload a receipt image and get back the parsed draft (multipart, so not via `request`). */

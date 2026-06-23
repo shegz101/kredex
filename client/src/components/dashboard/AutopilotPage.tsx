@@ -3,8 +3,17 @@ import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api } from '../../lib/api'
 import type { Approval } from '../../lib/api'
+import { useToast } from '../Toast'
+
+/** wa.me deep link — free WhatsApp message, normalising local NG numbers. */
+function waLink(phone: string, text: string): string {
+  let p = phone.replace(/\D/g, '')
+  if (p.startsWith('0')) p = '234' + p.slice(1)
+  return `https://wa.me/${p}?text=${encodeURIComponent(text)}`
+}
 
 const KIND: Record<Approval['kind'], { label: string; icon: string; approve: string }> = {
+  reminder: { label: 'Reminder', icon: 'solar:bell-bing-linear', approve: 'Mark done' },
   overdue_debt: { label: 'Overdue debt', icon: 'solar:wallet-money-linear', approve: 'Approve & send' },
   low_stock: { label: 'Low stock', icon: 'solar:box-linear', approve: 'Add to restock' },
   eod_summary: { label: 'End of day', icon: 'solar:chart-2-linear', approve: 'Got it' },
@@ -16,6 +25,7 @@ export default function AutopilotPage() {
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
+  const toast = useToast()
 
   async function load() {
     try {
@@ -43,11 +53,31 @@ export default function AutopilotPage() {
     }
   }
 
-  async function act(id: string, kind: 'approve' | 'dismiss') {
+  async function approve(a: Approval) {
+    setActingId(a._id)
+    try {
+      // overdue-debt alerts → open WhatsApp (or copy) so the reminder actually goes out
+      if (a.kind === 'overdue_debt' && a.draft) {
+        const phone = a.payload?.phone as string | undefined | null
+        if (phone) {
+          window.open(waLink(phone, a.draft), '_blank')
+          toast.success('Opening WhatsApp with the reminder.', 'Reminder ready')
+        } else {
+          navigator.clipboard?.writeText(a.draft).catch(() => {})
+          toast.info('No phone saved — reminder copied. Tell Kredex their number to send on WhatsApp.', 'Copied')
+        }
+      }
+      await api.approveApproval(a._id)
+      await load()
+    } finally {
+      setActingId(null)
+    }
+  }
+
+  async function dismiss(id: string) {
     setActingId(id)
     try {
-      if (kind === 'approve') await api.approveApproval(id)
-      else await api.dismissApproval(id)
+      await api.dismissApproval(id)
       await load()
     } finally {
       setActingId(null)
@@ -126,7 +156,7 @@ export default function AutopilotPage() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(a._id, 'approve')}
+                    onClick={() => approve(a)}
                     className="flex items-center gap-2 rounded-full bg-[#EB4A26] px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-60"
                   >
                     {busy ? <Icon icon="solar:refresh-linear" width="15" className="animate-spin" /> : <Icon icon="solar:check-circle-bold" width="15" />}
@@ -135,7 +165,7 @@ export default function AutopilotPage() {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => act(a._id, 'dismiss')}
+                    onClick={() => dismiss(a._id)}
                     className="rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
                   >
                     Skip

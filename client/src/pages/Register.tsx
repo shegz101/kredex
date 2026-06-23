@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '@iconify/react'
 import AuthLayout, { fieldClass, labelClass, submitClass } from '../components/AuthLayout'
 import { useAuth } from '../auth/AuthContext'
+import { useToast } from '../components/Toast'
+import { api } from '../lib/api'
+
+type EmailStatus = 'idle' | 'checking' | 'available' | 'taken'
 
 interface RegisterForm {
   name: string
@@ -15,25 +19,49 @@ interface RegisterForm {
 
 export default function Register() {
   const { register } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
 
   const [form, setForm] = useState<RegisterForm>({ name: '', email: '', password: '', shopName: '', shopType: '' })
   const [show, setShow] = useState(false)
-  const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle')
 
   const set = (k: keyof RegisterForm) => (e: ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
+  // Debounced live check: is this email already registered?
+  useEffect(() => {
+    const email = form.email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailStatus('idle')
+      return
+    }
+    setEmailStatus('checking')
+    let active = true
+    const t = setTimeout(async () => {
+      try {
+        const r = await api.emailAvailable(email)
+        if (active) setEmailStatus(r.available ? 'available' : 'taken')
+      } catch {
+        if (active) setEmailStatus('idle')
+      }
+    }, 500)
+    return () => {
+      active = false
+      clearTimeout(t)
+    }
+  }, [form.email])
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
     setBusy(true)
     try {
       await register(form)
+      toast.success(`${form.shopName} is ready to go.`, 'Shop created 🎉')
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      toast.error(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setBusy(false)
     }
@@ -54,13 +82,6 @@ export default function Register() {
       }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        {error && (
-          <div className="flex items-center gap-2 rounded-xl bg-[#EB4A26]/10 px-4 py-3 text-sm text-[#EB4A26]">
-            <Icon icon="solar:danger-triangle-linear" width="18" />
-            {error}
-          </div>
-        )}
-
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="name">Your name</label>
@@ -80,6 +101,22 @@ export default function Register() {
         <div>
           <label className={labelClass} htmlFor="email">Email address</label>
           <input id="email" type="email" required autoComplete="email" className={fieldClass} placeholder="you@shop.com" value={form.email} onChange={set('email')} />
+          {emailStatus === 'checking' && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-400">
+              <Icon icon="solar:refresh-linear" width="13" className="animate-spin" /> Checking availability…
+            </p>
+          )}
+          {emailStatus === 'available' && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-600">
+              <Icon icon="solar:check-circle-bold" width="13" /> Email is available
+            </p>
+          )}
+          {emailStatus === 'taken' && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#EB4A26]">
+              <Icon icon="solar:close-circle-bold" width="13" /> Already registered —{' '}
+              <Link to="/login" className="font-medium underline">sign in instead</Link>
+            </p>
+          )}
         </div>
 
         <div>
@@ -95,7 +132,7 @@ export default function Register() {
           </div>
         </div>
 
-        <button type="submit" disabled={busy} className={`${submitClass} mt-2`}>
+        <button type="submit" disabled={busy || emailStatus === 'taken'} className={`${submitClass} mt-2`}>
           {busy ? 'Creating your shop…' : 'Create shop'}
           {!busy && <Icon icon="solar:arrow-right-linear" width="18" />}
         </button>

@@ -3,7 +3,7 @@ import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api } from '../../lib/api'
 import type { PnlData } from '../../lib/api'
-import { naira } from '../../lib/format'
+import { useMoney } from '../../lib/useMoney'
 
 function pct(n: number) {
   return `${Math.round(n * 100)}%`
@@ -23,6 +23,7 @@ function Row({ label, value, sign, strong, tone }: { label: string; value: strin
 }
 
 export default function PnlPage() {
+  const { money } = useMoney()
   const [data, setData] = useState<PnlData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,20 +68,25 @@ export default function PnlPage() {
         <>
           {/* verdict */}
           <section
-            className={`relative overflow-hidden rounded-3xl p-7 text-white shadow-sm ${
+            className={`relative rounded-3xl p-7 text-white shadow-sm ${
               data.makingMoney ? 'bg-emerald-600' : 'bg-zinc-900'
             }`}
           >
-            <div className="absolute -right-10 -top-10 size-48 rounded-full bg-white/10 blur-2xl" />
-            <span className="font-mono text-xs uppercase tracking-widest text-white/70">{data.period} · Net profit</span>
-            <div className="mt-2 flex flex-wrap items-end gap-4">
-              <span className="font-mono text-5xl font-bold tracking-tight">{naira(data.netProfit)}</span>
-              <span className={`mb-1.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${data.makingMoney ? 'bg-white/20' : 'bg-[#EB4A26]'}`}>
-                <Icon icon={data.makingMoney ? 'solar:check-circle-bold' : 'solar:danger-triangle-bold'} width="16" />
-                {data.makingMoney ? 'Yes — you’re making money' : 'Not in profit yet'}
-              </span>
+            {/* glow lives in its own clipped layer so the narrative can grow freely */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+              <div className="absolute -right-10 -top-10 size-48 rounded-full bg-white/10 blur-2xl" />
             </div>
-            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/90">{data.narrative}</p>
+            <div className="relative">
+              <span className="font-mono text-xs uppercase tracking-widest text-white/70">{data.period} · Net profit</span>
+              <div className="mt-2 flex flex-wrap items-end gap-4">
+                <span className="font-mono text-5xl font-bold tracking-tight">{money(data.netProfit)}</span>
+                <span className={`mb-1.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${data.makingMoney ? 'bg-white/20' : 'bg-[#EB4A26]'}`}>
+                  <Icon icon={data.makingMoney ? 'solar:check-circle-bold' : 'solar:danger-triangle-bold'} width="16" />
+                  {data.makingMoney ? 'Yes — you’re making money' : 'Not in profit yet'}
+                </span>
+              </div>
+              <p className="mt-4 text-[15px] leading-relaxed text-white/90">{data.narrative}</p>
+            </div>
           </section>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -88,11 +94,11 @@ export default function PnlPage() {
             <section className="rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
               <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">The breakdown</h2>
               <div className="mt-2 flex flex-col">
-                <Row label="Revenue (sales)" value={naira(data.revenue)} />
-                <Row label="Cost of goods sold" sign="−" value={naira(data.costOfGoods)} />
-                <Row label={`Gross profit · ${pct(data.grossMargin)} margin`} value={naira(data.grossProfit)} strong tone={data.grossProfit >= 0 ? 'green' : 'red'} />
-                <Row label="Running expenses" sign="−" value={naira(data.expenses)} />
-                <Row label={`Net profit · ${pct(data.netMargin)} margin`} value={naira(data.netProfit)} strong tone={data.netProfit >= 0 ? 'green' : 'red'} />
+                <Row label="Revenue (sales)" value={money(data.revenue)} />
+                <Row label="Cost of goods sold" sign="−" value={money(data.costOfGoods)} />
+                <Row label={`Gross profit · ${pct(data.grossMargin)} margin`} value={money(data.grossProfit)} strong tone={data.grossProfit >= 0 ? 'green' : 'red'} />
+                <Row label="Running expenses" sign="−" value={money(data.expenses)} />
+                <Row label={`Net profit · ${pct(data.netMargin)} margin`} value={money(data.netProfit)} strong tone={data.netProfit >= 0 ? 'green' : 'red'} />
               </div>
             </section>
 
@@ -118,7 +124,7 @@ export default function PnlPage() {
                           {it.name}
                         </span>
                         <span className="w-14 text-right font-mono text-xs text-zinc-400">{it.unitsSold}</span>
-                        <span className="w-24 text-right font-mono text-zinc-700 dark:text-zinc-200">{naira(it.profit)}</span>
+                        <span className="w-24 text-right font-mono text-zinc-700 dark:text-zinc-200">{money(it.profit)}</span>
                         <span className={`w-16 text-right font-mono font-semibold ${marginTone}`}>{pct(it.margin)}</span>
                       </div>
                     )

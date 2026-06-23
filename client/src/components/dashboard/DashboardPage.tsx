@@ -41,7 +41,7 @@ export default function DashboardPage() {
       {!loading && data && (
         <>
           <StatCards stats={data.stats} />
-          <RevenueChart series={data.revenueSeries} labels={data.revenueLabels} total={data.stats.revenueThisMonth} />
+          <RevenueChart />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
             <RecentActivity activity={data.activity} />
             <div className="flex flex-col gap-6">

@@ -18,5 +18,7 @@ export const MODELS = {
   agent: "qwen3.5-flash",           // fast + cheap: routing, tool calls, simple logging
   vision: "qwen-vl-max", // vision-language model: reads receipts and returns structured items
   omni: "qwen3.5-omni-flash",       // voice in/out (stretch)
+  asr: "qwen3-asr-flash",           // speech-to-text (voice logging)
+  tts: "qwen3-tts-flash",           // text-to-speech (Kredex talks back)
   embedding: "text-embedding-v4",   // fuzzy name/item matching
 } as const;

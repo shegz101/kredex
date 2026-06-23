@@ -19,3 +19,13 @@
     display: none; /* Chrome/Safari */
   }
 }
+
+/* radar sweep for the Opportunity Scout loader */
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-radar-sweep {
+  animation: radar-sweep 2.6s linear infinite;
+}

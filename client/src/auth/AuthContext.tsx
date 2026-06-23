@@ -10,6 +10,7 @@ interface AuthContextValue {
   login: (credentials: LoginInput) => Promise<void>
   register: (details: RegisterInput) => Promise<void>
   logout: () => void
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -62,8 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setShop(null)
   }
 
+  // re-pull the profile (e.g. after the shop name/currency changes in Settings)
+  async function refresh() {
+    try {
+      const me = await api.me()
+      setUser(me.user)
+      setShop(me.shop)
+    } catch {
+      /* ignore */
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, shop, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, shop, loading, login, register, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )
