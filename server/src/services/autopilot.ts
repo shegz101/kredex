@@ -8,6 +8,8 @@ import {
 } from "../models/index.js";
 import { isLow, lowThreshold } from "../lib/stock.js";
 import { fmtMoney } from "../lib/money.js";
+import { qwen, MODELS } from "../lib/qwen.js";
+import { recall } from "./memory.js";
 
 /**
  * The autopilot layer. These scanners run in the background (node-cron) and
@@ -23,7 +25,7 @@ const balanceOf = (d: { amount: number; payments: { amount: number }[] }) =>
 /** Create an approval unless an identical one is already pending (dedupe). */
 async function raise(
   shopId: string,
-  data: { kind: "overdue_debt" | "low_stock" | "eod_summary" | "reminder"; title: string; body: string; draft?: string; payload?: Record<string, unknown>; dedupeKey?: string }
+  data: { kind: "overdue_debt" | "low_stock" | "eod_summary" | "reminder"; title: string; body: string; draft?: string; context?: string; payload?: Record<string, unknown>; dedupeKey?: string }
 ): Promise<boolean> {
   if (data.dedupeKey) {
     const existing = await ApprovalModel.findOne({ shopId, dedupeKey: data.dedupeKey, status: "pending" });
@@ -31,6 +33,48 @@ async function raise(
   }
   await ApprovalModel.create({ shopId, status: "pending", ...data });
   return true;
+}
+
+/**
+ * Write the payment reminder with Qwen, informed by what Kredex remembers about
+ * this customer (MemoryAgent → Autopilot). If the owner once told Kredex
+ * "Tunde always pays late but always pays", the draft comes out patient and
+ * appreciative rather than pushy. Falls back to a safe template if anything fails.
+ */
+async function draftReminder(
+  shopId: string,
+  name: string,
+  balance: number,
+  daysOver: number,
+  cur: string
+): Promise<{ draft: string; context?: string }> {
+  const fallback = `Good day ${name}, hope business dey move. Just a gentle reminder say ${fmtMoney(balance, cur)} dey outstanding from your last purchase. Abeg settle when you fit. Thank you! 🙏`;
+  try {
+    const facts = await recall(shopId, `payment reminder for customer ${name}; how ${name} usually pays and any relevant context`, 3);
+    const context = facts[0]; // the single most relevant memory drove the tone
+    const memoryLine = facts.length ? `What you remember (use it to set the tone):\n- ${facts.join("\n- ")}\n` : "";
+    const res = await qwen.chat.completions.create({
+      model: MODELS.agent,
+      temperature: 0.6,
+      max_tokens: 180,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You write short, warm WhatsApp payment reminders for a small African shop owner to send to a customer. Plain English or light Nigerian Pidgin. One short paragraph, friendly and respectful — never threatening or shaming. Always use the customer's name and the amount. If you know the customer usually pays late but always pays, be extra patient and appreciative. Return ONLY the message text, no quotes or preamble.",
+        },
+        {
+          role: "user",
+          content: `${memoryLine}Customer: ${name}\nOutstanding: ${fmtMoney(balance, cur)}\nOverdue by: ${daysOver} day${daysOver === 1 ? "" : "s"}\nWrite the reminder.`,
+        },
+      ],
+    });
+    const draft = res.choices[0]?.message?.content?.trim();
+    return { draft: draft || fallback, context };
+  } catch (err) {
+    console.error("draftReminder failed, using template:", (err as Error).message);
+    return { draft: fallback };
+  }
 }
 
 export async function scanOverdueDebts(shopId: string): Promise<number> {
@@ -45,12 +89,13 @@ export async function scanOverdueDebts(shopId: string): Promise<number> {
     const customer = d.customerId as unknown as { _id: unknown; name?: string; phone?: string } | null;
     const name = customer?.name ?? "Customer";
     const daysOver = Math.max(1, Math.round((now.getTime() - (d.dueDate as Date).getTime()) / 86_400_000));
-    const draft = `Good day ${name}, hope business dey move. Just a gentle reminder say ${fmtMoney(balance, cur)} dey outstanding from your last purchase. Abeg settle when you fit. Thank you! 🙏`;
+    const { draft, context } = await draftReminder(shopId, name, balance, daysOver, cur);
     const made = await raise(shopId, {
       kind: "overdue_debt",
       title: `${name} owes ${fmtMoney(balance, cur)}`,
       body: `${daysOver} day${daysOver === 1 ? "" : "s"} overdue. Send a friendly reminder?`,
       draft,
+      context,
       payload: { debtId: String(d._id), customerId: String(customer?._id ?? ""), customerName: name, amount: balance, phone: customer?.phone ?? null },
       dedupeKey: `overdue:${String(d._id)}`,
     });

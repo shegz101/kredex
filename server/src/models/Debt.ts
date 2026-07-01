@@ -30,6 +30,7 @@ const debtSchema = new Schema(
     status: { type: String, enum: ["open", "paid", "overdue"], default: "open" },
     dueDate: { type: Date },
     transactionId: { type: Schema.Types.ObjectId, ref: "Transaction" }, // the sale that opened it
+    lastRemindedAt: { type: Date }, // when the autopilot last sent a reminder (set on approve)
   },
   {
     timestamps: true,

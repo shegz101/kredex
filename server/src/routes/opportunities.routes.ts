@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
 import { ShopModel } from "../models/index.js";
 import { qwen, MODELS } from "../lib/qwen.js";
+import { cacheGet, cacheSet } from "../lib/cache.js";
 
 const router = Router();
 
@@ -40,6 +41,15 @@ router.post("/", requireAuth, async (req, res) => {
     const parsed = bodySchema.safeParse(req.body ?? {});
     const categories = (parsed.success && parsed.data.categories) || [];
     const query = parsed.success ? parsed.data.query : undefined;
+
+    // cache the (slow + costly) web-search result for ~10 min per shop+filters
+    const cacheKey = `opp:${String(shop._id)}:${[...categories].sort().join(",")}:${(query ?? "").toLowerCase().trim()}`;
+    const cached = cacheGet<{ location: string; opportunities: unknown[] }>(cacheKey);
+    if (cached) {
+      res.json({ ...cached, cached: true });
+      return;
+    }
+
     const want = categories.length
       ? categories.join(", ")
       : "loans, grants, empowerment/training programs, events and competitions";
@@ -56,10 +66,10 @@ Rules:
 - Prefer results from official organisation sites. Be concrete and accurate.`;
 
     const completion = await qwen.chat.completions.create({
-      model: MODELS.brain,
+      model: MODELS.agent, // fast flash model — web-grounded but far quicker than the flagship
       temperature: 0.4,
       enable_search: true,
-      search_options: { forced_search: true, search_strategy: "max" },
+      search_options: { forced_search: true, search_strategy: "standard" },
       messages: [
         { role: "system", content: "You are a precise, honest SME funding and opportunity scout with live web access. Search the web, then output strict JSON with real source URLs, no commentary." },
         { role: "user", content: prompt },
@@ -75,7 +85,9 @@ Rules:
       return;
     }
     const opportunities = Array.isArray(data.opportunities) ? data.opportunities.slice(0, 12) : [];
-    res.json({ location: shop.location, opportunities });
+    const payload = { location: shop.location, opportunities };
+    if (opportunities.length) cacheSet(cacheKey, payload, 10 * 60_000);
+    res.json(payload);
   } catch (err) {
     console.error("opportunities error:", err);
     res.status(500).json({ error: "Failed to find opportunities" });

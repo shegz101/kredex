@@ -4,6 +4,7 @@ import { z } from "zod";
 import { UserModel, ShopModel } from "../models/index.js";
 import { signToken } from "../lib/jwt.js";
 import { requireAuth } from "../middleware/auth.js";
+import { authLimiter } from "../lib/rateLimit.js";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ const registerSchema = z.object({
  * Creates the owner's User AND their Shop in one step, then returns a token.
  * We hash the password with bcrypt and NEVER store the raw value.
  */
-router.post("/register", async (req, res) => {
+router.post("/register", authLimiter, async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -82,7 +83,7 @@ const loginSchema = z.object({
  * We return the same vague message for "no such user" and "wrong password"
  * so attackers can't tell which emails are registered.
  */
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -131,7 +132,7 @@ const resetSchema = z.object({
  * DEMO-GRADE reset: sets a new password for a known email directly. A production
  * version would email a one-time reset link/token instead of trusting the caller.
  */
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", authLimiter, async (req, res) => {
   try {
     const parsed = resetSchema.safeParse(req.body);
     if (!parsed.success) {

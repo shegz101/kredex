@@ -15,6 +15,7 @@ const approvalSchema = new Schema(
     title: { type: String, required: true },
     body: { type: String, required: true },
     draft: { type: String }, // e.g. a ready-to-send reminder message
+    context: { type: String }, // the recalled memory that informed this decision (memory → autopilot)
     status: { type: String, enum: ["pending", "approved", "dismissed"], default: "pending", index: true },
     payload: { type: Schema.Types.Mixed, default: {} }, // ids + numbers the approve action needs
     dedupeKey: { type: String },

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
 import { runAgent } from "../agents/orchestrator.js";
 import { ChatMessageModel } from "../models/index.js";
+import { remember } from "../services/memory.js";
 
 const router = Router();
 
@@ -99,6 +100,9 @@ router.post("/", requireAuth, async (req, res) => {
       intent,
       actions: actions.map((a) => ({ name: a.name, result: a.result })),
     });
+
+    // MemoryAgent: durably remember what the owner said (embedded for recall)
+    void remember(shopId, message, "chat");
 
     send("done", { reply, actions });
   } catch (err) {

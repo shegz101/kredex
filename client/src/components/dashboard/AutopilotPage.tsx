@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api } from '../../lib/api'
-import type { Approval } from '../../lib/api'
+import type { Approval, RestockItem } from '../../lib/api'
 import { useToast } from '../Toast'
 
 /** wa.me deep link — free WhatsApp message, normalising local NG numbers. */
@@ -12,6 +12,17 @@ function waLink(phone: string, text: string): string {
   return `https://wa.me/${p}?text=${encodeURIComponent(text)}`
 }
 
+/** Compact "2h ago" / "3d ago" relative time for the timeline. */
+function timeAgo(iso?: string): string {
+  if (!iso) return ''
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  if (s < 604800) return `${Math.floor(s / 86400)}d ago`
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 const KIND: Record<Approval['kind'], { label: string; icon: string; approve: string }> = {
   reminder: { label: 'Reminder', icon: 'solar:bell-bing-linear', approve: 'Mark done' },
   overdue_debt: { label: 'Overdue debt', icon: 'solar:wallet-money-linear', approve: 'Approve & send' },
@@ -19,19 +30,29 @@ const KIND: Record<Approval['kind'], { label: string; icon: string; approve: str
   eod_summary: { label: 'End of day', icon: 'solar:chart-2-linear', approve: 'Got it' },
 }
 
+/** Timeline node styling per lifecycle state. */
+const STATE: Record<Approval['status'], { dot: string; ring: string; verb: string }> = {
+  pending: { dot: 'bg-amber-400', ring: 'ring-amber-400/30', verb: 'Awaiting your approval' },
+  approved: { dot: 'bg-emerald-500', ring: 'ring-emerald-500/20', verb: 'Approved' },
+  dismissed: { dot: 'bg-zinc-300 dark:bg-zinc-600', ring: 'ring-zinc-400/10', verb: 'Skipped' },
+}
+
 export default function AutopilotPage() {
   const [pending, setPending] = useState<Approval[]>([])
-  const [recent, setRecent] = useState<Approval[]>([])
+  const [timeline, setTimeline] = useState<Approval[]>([])
+  const [restock, setRestock] = useState<RestockItem[]>([])
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
+  const [restockingId, setRestockingId] = useState<string | null>(null)
   const toast = useToast()
 
   async function load() {
     try {
-      const r = await api.approvals()
-      setPending(r.pending)
-      setRecent(r.recent)
+      const [appr, tl, rs] = await Promise.all([api.approvals(), api.timeline(), api.restockList()])
+      setPending(appr.pending)
+      setTimeline(tl.items)
+      setRestock(rs.items)
     } catch {
       /* ignore */
     } finally {
@@ -46,8 +67,9 @@ export default function AutopilotPage() {
   async function runScan() {
     setScanning(true)
     try {
-      await api.scan()
+      const r = await api.scan()
       await load()
+      toast.info(r.created ? `Raised ${r.created} new item${r.created === 1 ? '' : 's'}.` : 'Nothing new — all clear.', 'Scan complete')
     } finally {
       setScanning(false)
     }
@@ -67,6 +89,7 @@ export default function AutopilotPage() {
           toast.info('No phone saved — reminder copied. Tell Kredex their number to send on WhatsApp.', 'Copied')
         }
       }
+      if (a.kind === 'low_stock') toast.success('Added to your restock list.', 'Done')
       await api.approveApproval(a._id)
       await load()
     } finally {
@@ -81,6 +104,17 @@ export default function AutopilotPage() {
       await load()
     } finally {
       setActingId(null)
+    }
+  }
+
+  async function markRestocked(item: RestockItem) {
+    setRestockingId(item.id)
+    try {
+      await api.markRestocked(item.id)
+      await load()
+      toast.success(`${item.name} cleared from your restock list.`, 'Restocked')
+    } finally {
+      setRestockingId(null)
     }
   }
 
@@ -145,6 +179,12 @@ export default function AutopilotPage() {
                     <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">{k.label}</span>
                     <h4 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{a.title}</h4>
                     <p className="mt-0.5 text-sm text-zinc-500">{a.body}</p>
+                    {a.context && (
+                      <p className="mt-2 flex items-start gap-1.5 text-xs text-[#EB4A26]/90">
+                        <Icon icon="solar:lightbulb-bolt-linear" width="14" className="mt-0.5 shrink-0" />
+                        <span><span className="font-medium">Kredex remembered:</span> {a.context}</span>
+                      </p>
+                    )}
                     {a.draft && (
                       <div className="mt-3 rounded-2xl border border-zinc-200 bg-[#F3F4EF]/70 p-3 text-sm italic text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-300">
                         "{a.draft}"
@@ -177,30 +217,101 @@ export default function AutopilotPage() {
         )}
       </section>
 
-      {/* recent */}
-      {recent.length > 0 && (
+      {/* restock list */}
+      {restock.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h3 className="px-1 text-sm font-semibold uppercase tracking-wider text-zinc-500">Recently handled</h3>
+          <div className="flex items-center gap-2 px-1">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Restock list</h3>
+            <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+              {restock.length}
+            </span>
+          </div>
           <div className="flex flex-col rounded-3xl bg-white border border-zinc-200 p-2 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
-            {recent.map((a, i) => (
-              <div
-                key={a._id}
-                className={`flex items-center gap-3 px-3 py-3 ${i !== recent.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800' : ''}`}
-              >
-                <Icon
-                  icon={a.status === 'approved' ? 'solar:check-circle-bold' : 'solar:close-circle-linear'}
-                  width="18"
-                  className={a.status === 'approved' ? 'text-emerald-500' : 'text-zinc-400'}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-700 dark:text-zinc-200">{a.title}</p>
-                  <p className="truncate text-xs text-zinc-400">{a.result}</p>
+            {restock.map((item, i) => {
+              const unit = item.unit ? ` ${item.unit}` : ''
+              const busy = restockingId === item.id
+              return (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-3 px-3 py-3 ${i !== restock.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800' : ''}`}
+                >
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-600 dark:text-amber-400">
+                    <Icon icon="solar:box-linear" width="18" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">{item.name}</p>
+                    <p className="truncate text-xs text-zinc-400">
+                      {item.quantity}
+                      {unit} left
+                      {item.restockQty != null && <> · reorder ~{item.restockQty}{unit}</>}
+                      {item.supplier && <> · from {item.supplier}</>}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => markRestocked(item)}
+                    className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-zinc-600 transition-colors hover:border-emerald-400 hover:text-emerald-600 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  >
+                    {busy ? (
+                      <Icon icon="solar:refresh-linear" width="13" className="animate-spin" />
+                    ) : (
+                      <Icon icon="solar:check-read-linear" width="13" />
+                    )}
+                    Restocked
+                  </button>
                 </div>
-                <span className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-zinc-300 dark:text-zinc-600">
-                  {a.status}
-                </span>
-              </div>
-            ))}
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* activity timeline */}
+      {timeline.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h3 className="px-1 text-sm font-semibold uppercase tracking-wider text-zinc-500">Activity timeline</h3>
+          <div className="rounded-3xl bg-white border border-zinc-200 p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+            <ol className="relative flex flex-col">
+              {timeline.map((a, i) => {
+                const k = KIND[a.kind]
+                const st = STATE[a.status]
+                const last = i === timeline.length - 1
+                return (
+                  <li key={a._id} className="relative flex gap-4 pb-6 last:pb-0">
+                    {/* connector line */}
+                    {!last && <span className="absolute left-[7px] top-5 h-full w-px bg-zinc-200 dark:bg-zinc-700" />}
+                    {/* node */}
+                    <span className={`relative z-10 mt-1.5 size-3.5 shrink-0 rounded-full ring-4 ${st.dot} ${st.ring} ${a.status === 'pending' ? 'animate-pulse' : ''}`} />
+                    <div className="min-w-0 flex-1 -mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <Icon icon={k.icon} width="14" className="shrink-0 text-zinc-400" />
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">{k.label}</span>
+                        <span className="ml-auto shrink-0 text-[11px] text-zinc-300 dark:text-zinc-600">{timeAgo(a.createdAt)}</span>
+                      </div>
+                      <p className="mt-0.5 text-sm font-medium text-zinc-800 dark:text-zinc-100">{a.title}</p>
+                      {a.context && (
+                        <p className="mt-1 flex items-start gap-1 text-xs text-[#EB4A26]/80">
+                          <Icon icon="solar:lightbulb-bolt-linear" width="12" className="mt-0.5 shrink-0" />
+                          <span className="truncate">{a.context}</span>
+                        </p>
+                      )}
+                      <p className={`mt-1 text-xs ${a.status === 'pending' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-400'}`}>
+                        {a.status === 'pending' ? (
+                          st.verb
+                        ) : (
+                          <>
+                            {st.verb}
+                            {a.result ? ` · ${a.result}` : ''}
+                            {a.resolvedAt ? ` · ${timeAgo(a.resolvedAt)}` : ''}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
           </div>
         </section>
       )}

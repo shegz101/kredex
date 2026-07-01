@@ -28,6 +28,9 @@ const inventoryItemSchema = new Schema(
     lowStockAt: { type: Number, default: 0 }, // reorder threshold for autopilot low-stock alerts
     supplier: { type: supplierSchema, default: undefined },
     nameEmbedding: { type: [Number], default: undefined, select: false }, // fuzzy item matching
+    needsRestock: { type: Boolean, default: false }, // owner approved an autopilot restock suggestion
+    restockQty: { type: Number }, // how much the autopilot suggested reordering
+    restockAddedAt: { type: Date }, // when it landed on the restock list
   },
   { timestamps: true }
 );

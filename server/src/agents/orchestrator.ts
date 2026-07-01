@@ -3,6 +3,7 @@ import { qwen, MODELS } from "../lib/qwen.js";
 import { ShopModel } from "../models/index.js";
 import { classify, type Intent } from "../lib/classifier.js";
 import { toolDefs, executeTool } from "./tools.js";
+import { recall } from "../services/memory.js";
 
 /**
  * The agent loop (multi-agent routing in one place):
@@ -54,8 +55,15 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
   const shopName = shop?.name ?? "your shop";
   const currency = shop?.currency ?? "NGN";
 
+  // MemoryAgent: semantically recall relevant facts from past sessions
+  const recalled = await recall(shopId, message, 5);
+  const memoryNote: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = recalled.length
+    ? [{ role: "system", content: "Things you remember about this shop that may be relevant:\n" + recalled.map((t) => `- ${t}`).join("\n") }]
+    : [];
+
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt(shopName, currency) },
+    ...memoryNote,
     ...history,
     { role: "user", content: message },
   ];

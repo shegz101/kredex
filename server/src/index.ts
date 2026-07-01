@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import cron from "node-cron";
+import compression from "compression";
 import { env } from "./config/env.js";
+import { apiLimiter, aiLimiter } from "./lib/rateLimit.js";
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
@@ -18,8 +20,21 @@ import { autopilotJobs } from "./services/autopilot.js";
 
 const app = express();
 
+// gzip responses, but never buffer the SSE chat stream
+app.use(
+  compression({
+    filter: (req, res) => {
+      const ct = res.getHeader("Content-Type");
+      if (typeof ct === "string" && ct.includes("text/event-stream")) return false;
+      return compression.filter(req, res);
+    },
+  })
+);
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
+
+// generous catch-all rate limit across the whole API
+app.use("/api", apiLimiter);
 
 // Health check — a simple "is the server alive?" endpoint.
 app.get("/api/health", (_req, res) => {
@@ -30,7 +45,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 
 // Chat: the AI agent spine (SSE streaming)
-app.use("/api/chat", chatRoutes);
+app.use("/api/chat", aiLimiter, chatRoutes);
 
 // Dashboard: live aggregated shop data
 app.use("/api/dashboard", dashboardRoutes);
@@ -39,10 +54,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/autopilot", autopilotRoutes);
 
 // Receipt OCR: photo -> Qwen vision -> structured items
-app.use("/api/receipt", receiptRoutes);
+app.use("/api/receipt", aiLimiter, receiptRoutes);
 
 // P&L: real profit + a Qwen-written "are you making money?" verdict
-app.use("/api/pnl", pnlRoutes);
+app.use("/api/pnl", aiLimiter, pnlRoutes);
 
 // Invoices: create, list, mark paid, download PDF
 app.use("/api/invoices", invoicesRoutes);
@@ -54,10 +69,10 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/reminders", remindersRoutes);
 
 // Voice: speech-to-text (speak-to-log)
-app.use("/api/voice", voiceRoutes);
+app.use("/api/voice", aiLimiter, voiceRoutes);
 
 // Opportunity Scout: location-aware loans, grants, programs, events
-app.use("/api/opportunities", opportunitiesRoutes);
+app.use("/api/opportunities", aiLimiter, opportunitiesRoutes);
 
 /**
  * The autopilot's heartbeat. These run server-wide on a schedule and raise

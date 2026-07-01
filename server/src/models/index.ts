@@ -12,3 +12,4 @@ export { ApprovalModel, type Approval } from "./Approval.js";
 export { ChatMessageModel, type ChatMessage } from "./ChatMessage.js";
 export { InvoiceModel, type Invoice } from "./Invoice.js";
 export { ReminderModel, type Reminder } from "./Reminder.js";
+export { MemoryModel, type Memory } from "./Memory.js";

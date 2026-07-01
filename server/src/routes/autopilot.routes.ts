@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { ApprovalModel, ReminderModel } from "../models/index.js";
+import { ApprovalModel, ReminderModel, DebtModel, InventoryItemModel } from "../models/index.js";
 import { scanShop } from "../services/autopilot.js";
 
 const router = Router();
@@ -88,10 +88,25 @@ router.post("/approvals/:id/approve", requireAuth, async (req, res) => {
       approval.resolvedAt = new Date();
       approval.result = resultFor(approval.kind, (approval.payload ?? {}) as Record<string, unknown>);
       await approval.save();
-      // a reminder being approved means it's handled — mark it done
+      // Execute the approved action for real, by kind.
+      const payload = (approval.payload ?? {}) as Record<string, unknown>;
       if (approval.kind === "reminder") {
-        const reminderId = (approval.payload as { reminderId?: string })?.reminderId;
+        // a reminder being approved means it's handled — mark it done
+        const reminderId = payload.reminderId as string | undefined;
         if (reminderId) await ReminderModel.updateOne({ _id: reminderId, shopId: req.shopId! }, { status: "done", doneAt: new Date() });
+      } else if (approval.kind === "overdue_debt") {
+        // record that the reminder went out, so we don't nag again and the timeline is truthful
+        const debtId = payload.debtId as string | undefined;
+        if (debtId) await DebtModel.updateOne({ _id: debtId, shopId: req.shopId! }, { lastRemindedAt: new Date() });
+      } else if (approval.kind === "low_stock") {
+        // actually put the item on the restock list
+        const itemId = payload.itemId as string | undefined;
+        const suggested = typeof payload.suggested === "number" ? payload.suggested : undefined;
+        if (itemId)
+          await InventoryItemModel.updateOne(
+            { _id: itemId, shopId: req.shopId! },
+            { needsRestock: true, restockQty: suggested, restockAddedAt: new Date() }
+          );
       }
     }
     res.json({ approval });
@@ -119,6 +134,56 @@ router.post("/approvals/:id/dismiss", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("dismiss error:", err);
     res.status(500).json({ error: "Failed to dismiss" });
+  }
+});
+
+/** GET /api/autopilot/restock — items the owner approved for reordering. */
+router.get("/restock", requireAuth, async (req, res) => {
+  try {
+    const items = await InventoryItemModel.find({ shopId: req.shopId!, needsRestock: true }).sort({ restockAddedAt: -1 });
+    res.json({
+      items: items.map((i) => ({
+        id: String(i._id),
+        name: i.name,
+        unit: i.unit ?? "",
+        quantity: i.quantity,
+        restockQty: i.restockQty ?? null,
+        supplier: i.supplier?.name ?? null,
+        addedAt: i.restockAddedAt ?? null,
+      })),
+    });
+  } catch (err) {
+    console.error("restock list error:", err);
+    res.status(500).json({ error: "Failed to load restock list" });
+  }
+});
+
+/** POST /api/autopilot/restock/:itemId/done — clear an item once it's reordered. */
+router.post("/restock/:itemId/done", requireAuth, async (req, res) => {
+  try {
+    const r = await InventoryItemModel.updateOne(
+      { _id: req.params.itemId, shopId: req.shopId! },
+      { needsRestock: false, restockQty: undefined, restockAddedAt: undefined }
+    );
+    if (r.matchedCount === 0) {
+      res.status(404).json({ error: "Item not found" });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("restock done error:", err);
+    res.status(500).json({ error: "Failed to update restock item" });
+  }
+});
+
+/** GET /api/autopilot/timeline — recent autopilot activity (any status), newest first. */
+router.get("/timeline", requireAuth, async (req, res) => {
+  try {
+    const items = await ApprovalModel.find({ shopId: req.shopId! }).sort({ createdAt: -1 }).limit(25);
+    res.json({ items });
+  } catch (err) {
+    console.error("timeline error:", err);
+    res.status(500).json({ error: "Failed to load timeline" });
   }
 });
 

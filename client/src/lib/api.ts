@@ -78,6 +78,7 @@ export interface Approval {
   title: string
   body: string
   draft?: string
+  context?: string
   status: 'pending' | 'approved' | 'dismissed'
   result?: string
   resolvedAt?: string
@@ -94,6 +95,16 @@ export interface ApprovalsResponse {
 export interface NotificationsResponse {
   items: Approval[]
   unread: number
+}
+
+export interface RestockItem {
+  id: string
+  name: string
+  unit: string
+  quantity: number
+  restockQty: number | null
+  supplier: string | null
+  addedAt: string | null
 }
 
 export interface PnlItem {
@@ -256,6 +267,9 @@ export const api = {
   scan: () => request<{ created: number; pendingCount: number }>('/autopilot/scan', { method: 'POST' }),
   approveApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/approve`, { method: 'POST' }),
   dismissApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/dismiss`, { method: 'POST' }),
+  restockList: () => request<{ items: RestockItem[] }>('/autopilot/restock'),
+  markRestocked: (itemId: string) => request<{ ok: true }>(`/autopilot/restock/${itemId}/done`, { method: 'POST' }),
+  timeline: () => request<{ items: Approval[] }>('/autopilot/timeline'),
   commitReceipt: (body: { supplier: string | null; items: ReceiptItem[] }) =>
     request<{ ok: boolean; logged: number }>('/receipt/commit', { method: 'POST', body }),
 }
