@@ -1,0 +1,40 @@
+# Kredex — all-in-one deployment stack for a single Alibaba Cloud ECS VM.
+#   web   → nginx serving the React build + reverse-proxying /api
+#   server → Express API (agent, autopilot cron, memory)
+#   mongo → MongoDB with a persistent named volume
+#
+# Usage on the ECS box:
+#   cp .env.example .env   # fill in QWEN_API_KEY + JWT_SECRET
+#   docker compose up -d --build
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # not published to the host — only reachable inside the compose network
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      QWEN_API_KEY: ${QWEN_API_KEY:?set QWEN_API_KEY in .env}
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope-intl.aliyuncs.com/compatible-mode/v1}
+      MONGODB_URI: mongodb://mongo:27017/kredex
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      PORT: "3001"
+      NODE_ENV: production
+    depends_on:
+      - mongo
+
+  web:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
+volumes:
+  mongo_data:

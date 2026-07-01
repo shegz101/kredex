@@ -24,6 +24,9 @@ npm-debug.log*
 # Local AI context (not for GitHub)
 CLAUDE.md
 
+# Local deployment notes (not for GitHub)
+DEPLOY.md
+
 # Uploads (local dev)
 uploads/
 tmp/
