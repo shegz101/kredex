@@ -1,11 +1,16 @@
-# Kredex — all-in-one deployment stack for a single Alibaba Cloud ECS VM.
-#   web   → nginx serving the React build + reverse-proxying /api
+# Kredex — all-in-one deployment stack for a single Alibaba Cloud VM.
+#   caddy  → HTTPS termination + auto Let's Encrypt certs (ports 80/443)
+#   web    → nginx serving the React build + reverse-proxying /api
 #   server → Express API (agent, autopilot cron, memory)
-#   mongo → MongoDB with a persistent named volume
+#   mongo  → MongoDB with a persistent named volume
 #
-# Usage on the ECS box:
+# Usage on the VM:
 #   cp .env.example .env   # fill in QWEN_API_KEY + JWT_SECRET
 #   docker compose up -d --build
+#
+# HTTPS: point kredex.xyz's DNS at this server BEFORE deploying caddy, so
+# Let's Encrypt can validate the domain. Caddy then obtains + renews certs
+# automatically. The domain served is set in ./Caddyfile.
 
 services:
   mongo:
@@ -31,10 +36,24 @@ services:
   web:
     build: ./client
     restart: unless-stopped
-    ports:
-      - "80:80"
+    # no host ports — caddy is the only thing exposed to the internet now
     depends_on:
       - server
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
 volumes:
   mongo_data:
+  caddy_data:
+  caddy_config:

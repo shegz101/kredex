@@ -1,0 +1,13 @@
+# Caddy auto-HTTPS for Kredex.
+# Serves kredex.xyz (and www) over HTTPS with free, auto-renewing Let's Encrypt
+# certs, and reverse-proxies everything to the internal nginx `web` container.
+# flush_interval -1 keeps the SSE chat stream flowing token-by-token.
+#
+# DNS for kredex.xyz must point at this server before first deploy, or cert
+# issuance will fail (Caddy retries automatically once DNS resolves).
+
+kredex.xyz, www.kredex.xyz {
+	reverse_proxy web:80 {
+		flush_interval -1
+	}
+}
