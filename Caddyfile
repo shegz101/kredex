@@ -11,3 +11,12 @@ kredex.xyz, www.kredex.xyz {
 		flush_interval -1
 	}
 }
+
+# Direct Alibaba Cloud server address over plain HTTP (no forced HTTPS redirect,
+# since there's no cert for a bare IP). Keeps the raw server reachable as a
+# deployment reference alongside the domain.
+http://8.222.241.247 {
+	reverse_proxy web:80 {
+		flush_interval -1
+	}
+}

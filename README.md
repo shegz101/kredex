@@ -16,8 +16,10 @@ Built for the **Global AI Hackathon Series with Qwen Cloud** — **Autopilot Age
 
 ## Live
 
+- 🌐 **Live app** — https://kredex.xyz
+- ☁️ **On Alibaba Cloud** — http://8.222.241.247 (Simple Application Server, Singapore)
+- 🐦 **Twitter / X** — https://x.com/getkredex
 - 🎥 **Demo video** — _add link before submission_
-- 🌐 **Live app** — _add Alibaba Cloud URL after deploy_
 - 🗺️ **Architecture** — see [Architecture](#architecture) below
 - 💻 **Repo** — https://github.com/shegz101/kredex
 
@@ -130,43 +132,15 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
 
 ## Architecture
 
-A 3-tier app with an AI agent layer. **Qwen Cloud (Alibaba Model Studio / DashScope)
-is the only external dependency** — reached through a single OpenAI-compatible
-client, with a native DashScope call for text-to-speech.
+Kredex runs as one Docker Compose stack on a single **Alibaba Cloud** Simple
+Application Server, behind **Caddy** (auto-HTTPS). The request path is
+**Browser → Caddy → nginx → Express → MongoDB**, and the Express server reaches
+**Qwen Cloud (Alibaba Model Studio / DashScope)** for every AI call — chat,
+vision, voice, and embeddings — through a single OpenAI-compatible client.
 
-```mermaid
-flowchart LR
-    subgraph Client["🖥️ Frontend — React 19 + Vite + TS"]
-        UI["Dashboard · Chat · Autopilot<br/>Invoices · P&amp;L · Opportunities · Voice"]
-    end
+![Kredex system architecture](docs/assets/architecture.png)
 
-    subgraph Server["⚙️ Backend — Express + TS (:3001)"]
-        MW["Middleware<br/>compression (SSE-safe) · CORS · rate-limit"]
-        Routes["11 route groups"]
-        Agent["🧠 Agent spine<br/>classifier → orchestrator (tool-calling) → tools"]
-        Mem["🧩 Memory service<br/>embed · recall · prune"]
-        Cron["🛰️ node-cron<br/>overdue · low-stock · EOD · reminders"]
-    end
-
-    DB[("🍃 MongoDB<br/>11 collections + embeddings")]
-
-    subgraph Qwen["☁️ Qwen Cloud — Alibaba Model Studio / DashScope"]
-        M1["qwen3.7-max · qwen3.5-flash"]
-        M2["qwen-vl-max · qwen3-asr · qwen3-tts"]
-        M3["text-embedding-v4"]
-    end
-
-    UI -->|"REST + SSE"| MW --> Routes
-    Routes --> Agent --> Mem
-    Routes --> Cron
-    Agent -->|"OpenAI-compatible SDK"| Qwen
-    Mem -->|"embeddings"| Qwen
-    Routes -->|"native fetch (TTS)"| Qwen
-    Agent <--> DB
-    Mem <--> DB
-    Cron --> DB
-    Routes <--> DB
-```
+> Vector source: [`docs/assets/architecture.svg`](docs/assets/architecture.svg)
 
 **The Qwen model map** (`server/src/lib/qwen.ts` — one edit swaps a version):
 
