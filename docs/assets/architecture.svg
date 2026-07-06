@@ -73,7 +73,7 @@
   <text x="425" y="486" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">E</text>
   <text x="454" y="476" font-size="15.5" font-weight="600" fill="#211F1B">Express server</text>
   <text x="454" y="497" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">:3001 · Node + TypeScript</text>
-  <text x="454" y="522" font-size="11.5" font-weight="600" fill="#B5540E" font-family="ui-monospace, Menlo, monospace">agent (Qwen tool-calling) · semantic memory · autopilot cron</text>
+  <text x="454" y="522" font-size="11.5" font-weight="600" fill="#B5540E" font-family="ui-monospace, Menlo, monospace">agent (Qwen tool-calling) · semantic memory · autopilot runs</text>
   <text x="454" y="540" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">classifier → orchestrator → tools · recall/remember · scanners</text>
 
   <!-- arrow server -> mongo -->

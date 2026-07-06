@@ -1,7 +1,8 @@
 import { Router } from "express";
+import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
-import { ApprovalModel, ReminderModel, DebtModel, InventoryItemModel } from "../models/index.js";
-import { scanShop } from "../services/autopilot.js";
+import { ApprovalModel, ShopModel, AutopilotRunModel, InventoryItemModel } from "../models/index.js";
+import { executeApproval, runAutopilotForShop, AUTOPILOT_DEFAULTS } from "../services/autopilot.js";
 
 const router = Router();
 
@@ -51,29 +52,20 @@ router.post("/notifications/read", requireAuth, async (req, res) => {
 });
 
 /** POST /api/autopilot/scan — run all scanners for this shop right now. */
+/** POST /api/autopilot/scan — run one full autonomous pass for this shop now. */
 router.post("/scan", requireAuth, async (req, res) => {
   try {
-    const created = await scanShop(req.shopId!);
-    const pendingCount = await ApprovalModel.countDocuments({ shopId: req.shopId!, status: "pending" });
-    res.json({ created, pendingCount });
+    await runAutopilotForShop(req.shopId!, "manual");
+    const [pendingCount, run] = await Promise.all([
+      ApprovalModel.countDocuments({ shopId: req.shopId!, status: "pending" }),
+      AutopilotRunModel.findOne({ shopId: req.shopId! }).sort({ createdAt: -1 }),
+    ]);
+    res.json({ pendingCount, run });
   } catch (err) {
     console.error("scan error:", err);
     res.status(500).json({ error: "Scan failed" });
   }
 });
-
-function resultFor(kind: string, payload: Record<string, unknown>): string {
-  switch (kind) {
-    case "overdue_debt":
-      return `Reminder sent to ${payload.customerName ?? "customer"} on WhatsApp`;
-    case "low_stock":
-      return `${payload.itemName ?? "Item"} added to your restock list`;
-    case "reminder":
-      return "Marked done";
-    default:
-      return "Reviewed";
-  }
-}
 
 /** POST /api/autopilot/approvals/:id/approve */
 router.post("/approvals/:id/approve", requireAuth, async (req, res) => {
@@ -83,32 +75,7 @@ router.post("/approvals/:id/approve", requireAuth, async (req, res) => {
       res.status(404).json({ error: "Approval not found" });
       return;
     }
-    if (approval.status === "pending") {
-      approval.status = "approved";
-      approval.resolvedAt = new Date();
-      approval.result = resultFor(approval.kind, (approval.payload ?? {}) as Record<string, unknown>);
-      await approval.save();
-      // Execute the approved action for real, by kind.
-      const payload = (approval.payload ?? {}) as Record<string, unknown>;
-      if (approval.kind === "reminder") {
-        // a reminder being approved means it's handled — mark it done
-        const reminderId = payload.reminderId as string | undefined;
-        if (reminderId) await ReminderModel.updateOne({ _id: reminderId, shopId: req.shopId! }, { status: "done", doneAt: new Date() });
-      } else if (approval.kind === "overdue_debt") {
-        // record that the reminder went out, so we don't nag again and the timeline is truthful
-        const debtId = payload.debtId as string | undefined;
-        if (debtId) await DebtModel.updateOne({ _id: debtId, shopId: req.shopId! }, { lastRemindedAt: new Date() });
-      } else if (approval.kind === "low_stock") {
-        // actually put the item on the restock list
-        const itemId = payload.itemId as string | undefined;
-        const suggested = typeof payload.suggested === "number" ? payload.suggested : undefined;
-        if (itemId)
-          await InventoryItemModel.updateOne(
-            { _id: itemId, shopId: req.shopId! },
-            { needsRestock: true, restockQty: suggested, restockAddedAt: new Date() }
-          );
-      }
-    }
+    await executeApproval(approval, req.shopId!);
     res.json({ approval });
   } catch (err) {
     console.error("approve error:", err);
@@ -184,6 +151,79 @@ router.get("/timeline", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("timeline error:", err);
     res.status(500).json({ error: "Failed to load timeline" });
+  }
+});
+
+/** GET /api/autopilot/settings — this shop's autonomy settings + next run. */
+router.get("/settings", requireAuth, async (req, res) => {
+  try {
+    const shop = await ShopModel.findById(req.shopId!).select("autopilot");
+    const ap = (shop?.autopilot as any) ?? {};
+    res.json({
+      settings: {
+        enabled: ap.enabled ?? AUTOPILOT_DEFAULTS.enabled,
+        intervalHours: ap.intervalHours ?? AUTOPILOT_DEFAULTS.intervalHours,
+        autonomy: ap.autonomy ?? AUTOPILOT_DEFAULTS.autonomy,
+        lastRunAt: ap.lastRunAt ?? null,
+        nextRunAt: ap.nextRunAt ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("autopilot settings get error:", err);
+    res.status(500).json({ error: "Failed to load settings" });
+  }
+});
+
+const settingsSchema = z.object({
+  enabled: z.boolean().optional(),
+  intervalHours: z.number().int().min(1).max(24).optional(),
+  autonomy: z.enum(["suggest", "auto_safe", "full_auto"]).optional(),
+});
+
+/** PUT /api/autopilot/settings — update autonomy + cadence. */
+router.put("/settings", requireAuth, async (req, res) => {
+  try {
+    const parsed = settingsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid settings" });
+      return;
+    }
+    const shop = await ShopModel.findById(req.shopId!);
+    if (!shop) {
+      res.status(404).json({ error: "Shop not found" });
+      return;
+    }
+    const ap: any = shop.autopilot ?? {};
+    if (parsed.data.enabled !== undefined) ap.enabled = parsed.data.enabled;
+    if (parsed.data.intervalHours !== undefined) ap.intervalHours = parsed.data.intervalHours;
+    if (parsed.data.autonomy !== undefined) ap.autonomy = parsed.data.autonomy;
+    // re-schedule from now so the change takes effect on the chosen cadence
+    ap.nextRunAt = new Date(Date.now() + (ap.intervalHours ?? AUTOPILOT_DEFAULTS.intervalHours) * 3_600_000);
+    shop.autopilot = ap;
+    await shop.save();
+    res.json({
+      settings: {
+        enabled: ap.enabled,
+        intervalHours: ap.intervalHours,
+        autonomy: ap.autonomy,
+        lastRunAt: ap.lastRunAt ?? null,
+        nextRunAt: ap.nextRunAt ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("autopilot settings put error:", err);
+    res.status(500).json({ error: "Failed to update settings" });
+  }
+});
+
+/** GET /api/autopilot/runs — recent autonomous runs (the "it worked" timeline). */
+router.get("/runs", requireAuth, async (req, res) => {
+  try {
+    const runs = await AutopilotRunModel.find({ shopId: req.shopId! }).sort({ createdAt: -1 }).limit(20);
+    res.json({ runs });
+  } catch (err) {
+    console.error("autopilot runs error:", err);
+    res.status(500).json({ error: "Failed to load runs" });
   }
 });
 

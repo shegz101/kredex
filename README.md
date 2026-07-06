@@ -92,9 +92,10 @@ together that most "AI bookkeeping" demos don't:
 - **It has real, persistent memory — not just a chat window.** Everything the
   owner tells Kredex is embedded and semantically recalled across sessions, so it
   behaves like a bookkeeper who actually *knows* your shop and your customers.
-- **It acts autonomously, with a human checkpoint.** Background scanners detect
-  overdue debts, low stock, and due reminders and raise approvals — nothing is
-  ever sent without the owner's yes.
+- **It acts autonomously, at the trust level you set.** On a schedule the owner
+  chooses, Kredex scans for overdue debts, low stock, and the day's numbers — then
+  *acts on the safe stuff itself* and *flags the rest* for approval. You pick how
+  much it does on its own (from "ask me everything" to "handle it").
 - **Memory and autopilot are fused.** When Kredex drafts a payment reminder, it
   uses what it remembers about that customer to set the tone — "always pays late
   but always pays" produces a patient message, not a pushy one — and shows you the
@@ -115,18 +116,28 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
   `text-embedding-v4` (1024-dim) and stored; each new turn semantically recalls the
   most relevant past facts (cosine similarity) and injects them into the agent's
   context. Bounded by a per-shop cap with oldest-first pruning ("forgetting").
-- **Autopilot with human-in-the-loop** — `node-cron` scanners (and an on-demand
-  **Run scan now**) detect overdue debts (08:00), low stock (/6h), end-of-day
-  summaries (21:00), and due reminders (/10min), raising deduped **approvals** the
-  owner accepts or skips.
+- **Autonomous autopilot with trust levels** — a 5-minute heartbeat runs each shop
+  on the **cadence its owner sets** (2h / 6h / 12h / 24h) — not a fixed clock. Each
+  run scans for overdue debts, low stock, end-of-day summaries, and due reminders,
+  then acts by the shop's **autonomy level**:
+  - **Suggest** — everything waits for approval.
+  - **Auto-safe** (default) — low-risk actions (restock, day summary) run
+    themselves; anything that messages a customer still asks first.
+  - **Full auto** — the autopilot also resolves customer reminders on its own.
+- **Autopilot runs feed** — every autonomous pass is recorded and shown: what it
+  *detected*, what it *did itself*, and what it *flagged* — e.g. *"Kredex auto-added
+  1 item to restock, logged the day's summary. Flagged 1 debt for your approval."*
+  Proof the agent worked while you were away.
 - **Memory-informed reminder drafting** — overdue-debt reminders are written by
   Qwen using recalled facts about the customer, tone-matched, with a safe template
   fallback. The memory used is shown on the card as **"🧠 Kredex remembered: …"**.
-- **Real execution on approve** — approving a debt reminder opens a free WhatsApp
-  (`wa.me`) message and records that it was sent; approving a low-stock alert puts
-  the item on a **Restock list**; approving a reminder marks it done.
-- **Activity timeline** — a visual, lifecycle feed (detected → decided + memory
-  used → your checkpoint → action) for the whole autopilot loop.
+- **Real execution** — a debt reminder opens a free WhatsApp (`wa.me`) message and
+  records it was sent; a low-stock alert puts the item on a **Restock list**; a
+  reminder marks done. Whether that happens automatically or on your tap depends on
+  the trust level.
+- **Approval feed + activity timeline** — anything the autopilot flags lands in a
+  human-in-the-loop approval feed, and a lifecycle timeline (detected → decided +
+  memory used → checkpoint → action) shows the whole loop.
 - **Receipt photo OCR** — snap a supplier receipt; `qwen-vl-max` extracts
   structured line items to confirm and log.
 - **Voice, both ways** — speak your entries (`qwen3-asr-flash`, speech-to-text) and
@@ -184,17 +195,19 @@ Owner message
        -> stream the reply
   -> remember: embed + store the message for next time
 
-Background (cron) / on-demand scan
-  -> detect overdue debt / low stock / due reminder
-  -> draft (memory-informed) + raise an Approval
-  -> owner approves  ->  real action (WhatsApp / restock list / done)
-  -> everything lands on the Activity timeline
+Autopilot run (heartbeat every 5m, per-shop cadence / on-demand)
+  -> detect overdue debt / low stock / EOD summary / due reminder
+  -> draft (memory-informed) each action
+  -> apply trust level: auto-run the safe stuff, flag the rest for approval
+  -> execute (WhatsApp / restock list / done) + record an AutopilotRun
+  -> the owner approves anything that was flagged
 ```
 
 - `server/src/agents/orchestrator.ts` — the Qwen tool-calling loop; injects recalled
   memories into the system prompt.
 - `server/src/services/memory.ts` — `remember()` / `recall()` / `prune()`.
-- `server/src/services/autopilot.ts` — scanners + memory-informed reminder drafting.
+- `server/src/services/autopilot.ts` — scanners, memory-informed drafting,
+  `executeApproval()`, and `runAutopilotForShop()` / `runDueShops()` (the scheduler).
 
 ## Requirements
 
@@ -309,8 +322,8 @@ Try these in the chat once you're logged in:
 > are you making money this month?
 ```
 
-Then open **Autopilot → Run scan now** to see approvals, the restock list, and the
-activity timeline populate.
+Then open **Autopilot**, set your cadence and trust level, and hit **Run now** to
+see the run recorded and the approvals, restock list, and activity timeline populate.
 
 ## Deployment
 
@@ -332,14 +345,14 @@ across rebuilds. Live at **https://kredex.xyz**.
 
 ```
 server/src/
-  index.ts             # Express app: middleware, route mounts, autopilot cron
+  index.ts             # Express app: middleware, route mounts, autopilot heartbeat
   config/env.ts        # validated environment (fails loud on missing vars)
   agents/
     orchestrator.ts    # Qwen tool-calling agent loop + memory recall injection
     tools.ts           # function-calling tools (record_sale, log_stock, create_invoice…)
   services/
     memory.ts          # MemoryAgent: remember() / recall() / prune() (embeddings)
-    autopilot.ts       # scanners + memory-informed Qwen reminder drafting
+    autopilot.ts       # scanners · memory-informed drafting · autonomy · runAutopilotForShop
   lib/
     qwen.ts            # one OpenAI-compatible DashScope client + central model map
     embeddings.ts      # embed() + cosine() for semantic memory
@@ -348,7 +361,7 @@ server/src/
     money.ts           # currency formatting        stock.ts     # low-stock helpers
     jwt.ts             # sign/verify tokens          invoicePdf.ts# PDF generation
     db.ts              # Mongoose connection
-  models/              # 11 Mongoose schemas incl. Memory.ts, Approval.ts
+  models/              # 12 Mongoose schemas incl. Memory.ts, Approval.ts, AutopilotRun.ts
   routes/              # auth · chat · dashboard · autopilot · receipt · pnl ·
                        # invoices · settings · reminders · voice · opportunities
   middleware/auth.ts   # requireAuth (JWT)

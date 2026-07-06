@@ -107,6 +107,33 @@ export interface RestockItem {
   addedAt: string | null
 }
 
+export type Autonomy = 'suggest' | 'auto_safe' | 'full_auto'
+
+export interface AutopilotSettings {
+  enabled: boolean
+  intervalHours: number
+  autonomy: Autonomy
+  lastRunAt: string | null
+  nextRunAt: string | null
+}
+
+export interface AutopilotRunLine {
+  kind: Approval['kind']
+  title: string
+  result?: string
+}
+
+export interface AutopilotRun {
+  _id: string
+  trigger: 'scheduled' | 'manual'
+  detected: { overdueDebts: number; lowStock: number; dueReminders: number; eodSummary: number }
+  autoExecuted: AutopilotRunLine[]
+  pendingApproval: AutopilotRunLine[]
+  autonomy: Autonomy
+  summary: string
+  createdAt: string
+}
+
 export interface PnlItem {
   name: string
   unitsSold: number
@@ -264,7 +291,11 @@ export const api = {
   notifications: () => request<NotificationsResponse>('/autopilot/notifications'),
   markRead: (id: string) => request<{ unread: number }>('/autopilot/notifications/read', { method: 'POST', body: { id } }),
   markAllRead: () => request<{ unread: number }>('/autopilot/notifications/read', { method: 'POST' }),
-  scan: () => request<{ created: number; pendingCount: number }>('/autopilot/scan', { method: 'POST' }),
+  scan: () => request<{ pendingCount: number; run: AutopilotRun | null }>('/autopilot/scan', { method: 'POST' }),
+  autopilotSettings: () => request<{ settings: AutopilotSettings }>('/autopilot/settings'),
+  updateAutopilotSettings: (body: Partial<Pick<AutopilotSettings, 'enabled' | 'intervalHours' | 'autonomy'>>) =>
+    request<{ settings: AutopilotSettings }>('/autopilot/settings', { method: 'PUT', body }),
+  autopilotRuns: () => request<{ runs: AutopilotRun[] }>('/autopilot/runs'),
   approveApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/approve`, { method: 'POST' }),
   dismissApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/dismiss`, { method: 'POST' }),
   restockList: () => request<{ items: RestockItem[] }>('/autopilot/restock'),

@@ -2,8 +2,27 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api } from '../../lib/api'
-import type { Approval, RestockItem } from '../../lib/api'
+import type { Approval, RestockItem, AutopilotSettings, AutopilotRun, Autonomy } from '../../lib/api'
 import { useToast } from '../Toast'
+
+const AUTONOMY: Record<Autonomy, { label: string; desc: string }> = {
+  suggest: { label: 'Suggest', desc: 'Everything waits for your approval' },
+  auto_safe: { label: 'Auto-safe', desc: 'Low-risk actions run themselves; customer messages ask first' },
+  full_auto: { label: 'Full auto', desc: 'Also sends customer reminders on its own' },
+}
+
+const INTERVALS = [2, 6, 12, 24]
+
+/** "in 2h 10m" for the next scheduled run. */
+function timeUntil(iso?: string | null): string {
+  if (!iso) return 'soon'
+  const s = (new Date(iso).getTime() - Date.now()) / 1000
+  if (s <= 0) return 'shortly'
+  if (s < 3600) return `in ${Math.round(s / 60)}m`
+  const h = Math.floor(s / 3600)
+  const m = Math.round((s % 3600) / 60)
+  return m ? `in ${h}h ${m}m` : `in ${h}h`
+}
 
 /** wa.me deep link — free WhatsApp message, normalising local NG numbers. */
 function waLink(phone: string, text: string): string {
@@ -41,18 +60,25 @@ export default function AutopilotPage() {
   const [pending, setPending] = useState<Approval[]>([])
   const [timeline, setTimeline] = useState<Approval[]>([])
   const [restock, setRestock] = useState<RestockItem[]>([])
+  const [settings, setSettings] = useState<AutopilotSettings | null>(null)
+  const [runs, setRuns] = useState<AutopilotRun[]>([])
   const [loading, setLoading] = useState(true)
   const [scanning, setScanning] = useState(false)
+  const [savingSettings, setSavingSettings] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
   const [restockingId, setRestockingId] = useState<string | null>(null)
   const toast = useToast()
 
   async function load() {
     try {
-      const [appr, tl, rs] = await Promise.all([api.approvals(), api.timeline(), api.restockList()])
+      const [appr, tl, rs, st, rn] = await Promise.all([
+        api.approvals(), api.timeline(), api.restockList(), api.autopilotSettings(), api.autopilotRuns(),
+      ])
       setPending(appr.pending)
       setTimeline(tl.items)
       setRestock(rs.items)
+      setSettings(st.settings)
+      setRuns(rn.runs)
     } catch {
       /* ignore */
     } finally {
@@ -64,12 +90,22 @@ export default function AutopilotPage() {
     void load()
   }, [])
 
+  async function saveSettings(patch: Partial<Pick<AutopilotSettings, 'enabled' | 'intervalHours' | 'autonomy'>>) {
+    setSavingSettings(true)
+    try {
+      const r = await api.updateAutopilotSettings(patch)
+      setSettings(r.settings)
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
   async function runScan() {
     setScanning(true)
     try {
       const r = await api.scan()
       await load()
-      toast.info(r.created ? `Raised ${r.created} new item${r.created === 1 ? '' : 's'}.` : 'Nothing new — all clear.', 'Scan complete')
+      toast.info(r.run?.summary ?? 'Autopilot ran.', 'Autopilot run complete')
     } finally {
       setScanning(false)
     }
@@ -128,10 +164,10 @@ export default function AutopilotPage() {
           </span>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Kredex is watching your shop
+              Kredex runs your shop on autopilot
             </h2>
             <p className="mt-0.5 text-sm text-zinc-500">
-              It scans for overdue debts, low stock, and your day's numbers — then waits for your yes. Nothing happens without you.
+              On the schedule you set, it scans for overdue debts, low stock, and your day's numbers — acting on the safe stuff itself and flagging the rest, at the trust level you choose.
             </p>
           </div>
         </div>
@@ -142,9 +178,87 @@ export default function AutopilotPage() {
           className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-60 dark:bg-white dark:text-zinc-900"
         >
           <Icon icon="solar:refresh-linear" width="16" className={scanning ? 'animate-spin' : ''} />
-          {scanning ? 'Scanning…' : 'Run scan now'}
+          {scanning ? 'Running…' : 'Run now'}
         </button>
       </section>
+
+      {/* autopilot controls */}
+      {settings && (
+        <section className="rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                disabled={savingSettings}
+                onClick={() => saveSettings({ enabled: !settings.enabled })}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${settings.enabled ? 'bg-[#EB4A26]' : 'bg-zinc-300 dark:bg-zinc-700'}`}
+                aria-label="Toggle autopilot"
+              >
+                <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${settings.enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  Autopilot is {settings.enabled ? 'on' : 'off'}
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  {settings.enabled
+                    ? <>Next run {timeUntil(settings.nextRunAt)} · runs every {settings.intervalHours}h</>
+                    : 'Turn on to let Kredex scan and act on a schedule'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {settings.enabled && (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              {/* interval */}
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">How often it runs</p>
+                <div className="flex gap-1.5">
+                  {INTERVALS.map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      disabled={savingSettings}
+                      onClick={() => saveSettings({ intervalHours: h })}
+                      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                        settings.intervalHours === h
+                          ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
+                          : 'border border-zinc-200 text-zinc-600 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* autonomy */}
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-zinc-400">How much it does on its own</p>
+                <div className="flex gap-1.5">
+                  {(Object.keys(AUTONOMY) as Autonomy[]).map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      disabled={savingSettings}
+                      onClick={() => saveSettings({ autonomy: a })}
+                      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                        settings.autonomy === a
+                          ? 'bg-[#EB4A26] text-white'
+                          : 'border border-zinc-200 text-zinc-600 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      {AUTONOMY[a].label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-zinc-500">{AUTONOMY[settings.autonomy].desc}</p>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* pending */}
       <section className="flex flex-col gap-3">
@@ -261,6 +375,51 @@ export default function AutopilotPage() {
                     Restocked
                   </button>
                 </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* autopilot runs — proof it worked on its own */}
+      {runs.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h3 className="px-1 text-sm font-semibold uppercase tracking-wider text-zinc-500">Autopilot runs</h3>
+          <div className="flex flex-col gap-2">
+            {runs.map((run) => {
+              const acted = run.autoExecuted.length
+              const flagged = run.pendingApproval.length
+              return (
+                <article key={run._id} className="rounded-2xl bg-white border border-zinc-200 p-4 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                  <div className="flex items-start gap-3">
+                    <span className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg ${acted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-400/10 text-zinc-400'}`}>
+                      <Icon icon="solar:bolt-circle-bold" width="18" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">
+                          {run.trigger === 'manual' ? 'Manual run' : 'Auto run'} · {AUTONOMY[run.autonomy]?.label ?? run.autonomy}
+                        </span>
+                        <span className="ml-auto shrink-0 text-[11px] text-zinc-300 dark:text-zinc-600">{timeAgo(run.createdAt)}</span>
+                      </div>
+                      <p className="mt-0.5 text-sm text-zinc-700 dark:text-zinc-200">{run.summary}</p>
+                      {(acted > 0 || flagged > 0) && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {run.autoExecuted.map((l, i) => (
+                            <span key={`a${i}`} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                              <Icon icon="solar:check-circle-bold" width="11" /> {l.title}
+                            </span>
+                          ))}
+                          {run.pendingApproval.map((l, i) => (
+                            <span key={`p${i}`} className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                              <Icon icon="solar:clock-circle-linear" width="11" /> {l.title}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </article>
               )
             })}
           </div>

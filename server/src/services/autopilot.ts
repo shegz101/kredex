@@ -5,11 +5,16 @@ import {
   ShopModel,
   TransactionModel,
   ReminderModel,
+  AutopilotRunModel,
 } from "../models/index.js";
 import { isLow, lowThreshold } from "../lib/stock.js";
 import { fmtMoney } from "../lib/money.js";
 import { qwen, MODELS } from "../lib/qwen.js";
 import { recall } from "./memory.js";
+
+/** Defaults used when a shop has no autopilot settings saved yet. */
+export const AUTOPILOT_DEFAULTS = { enabled: true, intervalHours: 6, autonomy: "auto_safe" as const };
+type Autonomy = "suggest" | "auto_safe" | "full_auto";
 
 /**
  * The autopilot layer. These scanners run in the background (node-cron) and
@@ -181,21 +186,162 @@ export async function scanShop(shopId: string): Promise<number> {
   return counts.reduce((a, b) => a + b, 0);
 }
 
-/** Run a scanner across every shop (used by the cron schedules). */
-async function forAllShops(fn: (shopId: string) => Promise<number>, label: string) {
-  try {
-    const shops = await ShopModel.find().select("_id");
-    let total = 0;
-    for (const s of shops) total += await fn(String(s._id));
-    if (total > 0) console.log(`🛰️  autopilot ${label}: raised ${total} approval(s)`);
-  } catch (err) {
-    console.error(`autopilot ${label} failed:`, err);
+// ---- Approval execution (shared by the approve route AND the autopilot) ----
+
+/** Human-readable result string once an approval is carried out. */
+export function resultFor(kind: string, payload: Record<string, unknown>): string {
+  switch (kind) {
+    case "overdue_debt":
+      return `Reminder sent to ${payload.customerName ?? "customer"} on WhatsApp`;
+    case "low_stock":
+      return `${payload.itemName ?? "Item"} added to your restock list`;
+    case "reminder":
+      return "Marked done";
+    case "eod_summary":
+      return "Reviewed";
+    default:
+      return "Reviewed";
   }
 }
 
-export const autopilotJobs = {
-  overdue: () => forAllShops(scanOverdueDebts, "overdue-debt scan"),
-  lowStock: () => forAllShops(scanLowStock, "low-stock scan"),
-  eod: () => forAllShops(generateEodSummary, "end-of-day summary"),
-  reminders: () => forAllShops(scanDueReminders, "due-reminder scan"),
-};
+/**
+ * Carry out an approved action for real. Used both when the owner taps
+ * "approve" and when the autopilot approves it autonomously.
+ */
+export async function executeApproval(approval: any, shopId: string): Promise<void> {
+  if (approval.status !== "pending") return;
+  approval.status = "approved";
+  approval.resolvedAt = new Date();
+  approval.result = resultFor(approval.kind, (approval.payload ?? {}) as Record<string, unknown>);
+  await approval.save();
+
+  const payload = (approval.payload ?? {}) as Record<string, unknown>;
+  if (approval.kind === "reminder") {
+    const reminderId = payload.reminderId as string | undefined;
+    if (reminderId) await ReminderModel.updateOne({ _id: reminderId, shopId }, { status: "done", doneAt: new Date() });
+  } else if (approval.kind === "overdue_debt") {
+    const debtId = payload.debtId as string | undefined;
+    if (debtId) await DebtModel.updateOne({ _id: debtId, shopId }, { lastRemindedAt: new Date() });
+  } else if (approval.kind === "low_stock") {
+    const itemId = payload.itemId as string | undefined;
+    const suggested = typeof payload.suggested === "number" ? payload.suggested : undefined;
+    if (itemId)
+      await InventoryItemModel.updateOne({ _id: itemId, shopId }, { needsRestock: true, restockQty: suggested, restockAddedAt: new Date() });
+  }
+}
+
+/** Which action kinds the autopilot may carry out itself, per trust level. */
+function canAutoExecute(kind: string, autonomy: Autonomy): boolean {
+  if (autonomy === "suggest") return false;
+  // low-risk, server-side actions are safe to auto-run at every level above "suggest"
+  if (kind === "low_stock" || kind === "eod_summary") return true;
+  // messaging a customer is only automated at the highest trust level
+  if (kind === "overdue_debt") return autonomy === "full_auto";
+  return false; // "reminder" nudges always surface for the owner to see
+}
+
+// ---- The autonomous run ----
+
+const MAX_RUNS_PER_SHOP = 40;
+
+/**
+ * One autonomous pass over a shop: scan → apply the shop's trust level (auto-run
+ * the safe stuff, flag the rest) → record a visible AutopilotRun → schedule the
+ * next run. This is the heart of the Autopilot Agent: it works on a cadence the
+ * owner sets, and acts within the guardrails the owner chose.
+ */
+export async function runAutopilotForShop(shopId: string, trigger: "scheduled" | "manual"): Promise<void> {
+  try {
+    const shop = await ShopModel.findById(shopId);
+    if (!shop) return;
+    const ap = (shop.autopilot as any) ?? {};
+    const autonomy: Autonomy = ap.autonomy ?? AUTOPILOT_DEFAULTS.autonomy;
+    const intervalHours: number = ap.intervalHours ?? AUTOPILOT_DEFAULTS.intervalHours;
+
+    const runStart = new Date();
+    const [overdueDebts, lowStock, eodSummary, dueReminders] = [
+      await scanOverdueDebts(shopId),
+      await scanLowStock(shopId),
+      await generateEodSummary(shopId),
+      await scanDueReminders(shopId),
+    ];
+
+    // everything this pass just raised, still awaiting a decision
+    const raised = await ApprovalModel.find({ shopId, status: "pending", createdAt: { $gte: runStart } });
+    const autoExecuted: { kind: string; title: string; result: string }[] = [];
+    const pendingApproval: { kind: string; title: string }[] = [];
+
+    for (const appr of raised) {
+      if (canAutoExecute(appr.kind, autonomy)) {
+        await executeApproval(appr, shopId);
+        appr.readAt = new Date(); // the owner didn't need to act, so don't badge it unread
+        await appr.save();
+        autoExecuted.push({ kind: appr.kind, title: appr.title, result: appr.result ?? "Done" });
+      } else {
+        pendingApproval.push({ kind: appr.kind, title: appr.title });
+      }
+    }
+
+    const summary = buildRunSummary(autoExecuted, pendingApproval);
+    await AutopilotRunModel.create({
+      shopId,
+      trigger,
+      detected: { overdueDebts, lowStock, dueReminders, eodSummary },
+      autoExecuted,
+      pendingApproval,
+      autonomy,
+      summary,
+    });
+
+    // keep the runs list bounded
+    const count = await AutopilotRunModel.countDocuments({ shopId });
+    if (count > MAX_RUNS_PER_SHOP) {
+      const old = await AutopilotRunModel.find({ shopId }).sort({ createdAt: 1 }).limit(count - MAX_RUNS_PER_SHOP).select("_id");
+      await AutopilotRunModel.deleteMany({ _id: { $in: old.map((o) => o._id) } });
+    }
+
+    // schedule the next autonomous run
+    await ShopModel.updateOne(
+      { _id: shopId },
+      { $set: { "autopilot.lastRunAt": runStart, "autopilot.nextRunAt": new Date(runStart.getTime() + intervalHours * 3_600_000) } }
+    );
+  } catch (err) {
+    console.error(`autopilot run failed for ${shopId}:`, (err as Error).message);
+  }
+}
+
+function buildRunSummary(auto: { kind: string }[], pending: { kind: string }[]): string {
+  const parts: string[] = [];
+  const restocked = auto.filter((a) => a.kind === "low_stock").length;
+  const loggedEod = auto.some((a) => a.kind === "eod_summary");
+  const sentReminders = auto.filter((a) => a.kind === "overdue_debt").length;
+  if (restocked) parts.push(`auto-added ${restocked} item${restocked === 1 ? "" : "s"} to restock`);
+  if (loggedEod) parts.push("logged the day's summary");
+  if (sentReminders) parts.push(`sent ${sentReminders} payment reminder${sentReminders === 1 ? "" : "s"}`);
+  const flagged = pending.length;
+  const done = parts.length ? parts.join(", ") : "";
+  if (!done && !flagged) return "All clear — nothing needed your attention.";
+  const first = done ? `Kredex ${done}.` : "";
+  const second = flagged ? ` Flagged ${flagged} thing${flagged === 1 ? "" : "s"} for your approval.` : "";
+  return (first + second).trim();
+}
+
+/** Scheduler tick: run every shop whose autopilot is enabled and due. */
+export async function runDueShops(): Promise<void> {
+  try {
+    const now = new Date();
+    // { $ne: false } matches shops that are enabled OR have no settings yet (default on)
+    const shops = await ShopModel.find({ "autopilot.enabled": { $ne: false } }).select("_id autopilot");
+    let ran = 0;
+    for (const s of shops) {
+      const next = (s.autopilot as any)?.nextRunAt as Date | undefined;
+      if (!next || next <= now) {
+        await runAutopilotForShop(String(s._id), "scheduled");
+        ran++;
+      }
+    }
+    if (ran > 0) console.log(`🛰️  autopilot: ran ${ran} shop(s)`);
+  } catch (err) {
+    console.error("autopilot scheduler failed:", (err as Error).message);
+  }
+}

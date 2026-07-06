@@ -16,7 +16,7 @@ import settingsRoutes from "./routes/settings.routes.js";
 import remindersRoutes from "./routes/reminders.routes.js";
 import voiceRoutes from "./routes/voice.routes.js";
 import opportunitiesRoutes from "./routes/opportunities.routes.js";
-import { autopilotJobs } from "./services/autopilot.js";
+import { runDueShops } from "./services/autopilot.js";
 
 const app = express();
 
@@ -80,11 +80,10 @@ app.use("/api/opportunities", aiLimiter, opportunitiesRoutes);
  * the same scanners on demand so you don't have to wait for the clock.)
  */
 function scheduleAutopilot() {
-  cron.schedule("0 8 * * *", autopilotJobs.overdue); // daily 08:00 — overdue debts
-  cron.schedule("0 */6 * * *", autopilotJobs.lowStock); // every 6h — low stock
-  cron.schedule("0 21 * * *", autopilotJobs.eod); // daily 21:00 — end-of-day summary
-  cron.schedule("*/10 * * * *", autopilotJobs.reminders); // every 10 min — due reminders
-  console.log("🛰️  Autopilot scheduled (overdue 08:00 · low-stock /6h · EOD 21:00 · reminders /10m)");
+  // One heartbeat: every 5 minutes we run each shop whose autopilot is due,
+  // on the cadence (and at the autonomy level) that shop's owner chose.
+  cron.schedule("*/5 * * * *", runDueShops);
+  console.log("🛰️  Autopilot heartbeat scheduled (every 5m · per-shop intervals)");
 }
 
 async function start() {
