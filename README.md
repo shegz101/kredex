@@ -1,4 +1,4 @@
-<!-- ![Kredex product banner](docs/assets/kredex-banner.png) -->
+![Kredex — your books, on autopilot](docs/assets/kredex-banner.png)
 
 # Kredex — AI Financial Autopilot for African Small Businesses
 
@@ -11,6 +11,14 @@
 > shaped by what it remembers and logged on a visible timeline.
 
 Built for the **Global AI Hackathon Series with Qwen Cloud** — **Autopilot Agent** track.
+
+![License: MIT](https://img.shields.io/badge/License-MIT-EB4A26.svg)
+![PRs welcome](https://img.shields.io/badge/PRs-welcome-2E9C6E.svg)
+![Powered by Qwen](https://img.shields.io/badge/AI-Qwen%20Cloud-7C5CFF.svg)
+![Docker ready](https://img.shields.io/badge/Docker-ready-2496ED.svg)
+
+**Kredex is free and open source (MIT).** Contributions are welcome — see
+[Contributing](#contributing).
 
 ---
 
@@ -33,30 +41,39 @@ Built for the **Global AI Hackathon Series with Qwen Cloud** — **Autopilot Age
 - [Architecture](#architecture)
 - [The agent layer](#the-agent-layer)
 - [Requirements](#requirements)
-- [Setup](#setup)
+- [Run with Docker (easiest)](#run-with-docker-easiest)
+- [Local development (without Docker)](#local-development-without-docker)
 - [Usage](#usage)
+- [Deployment](#deployment)
 - [Project layout](#project-layout)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
 
 ## Quick Path
 
-The shortest path from clone to a running app:
+**Fastest — with Docker** (only needs Docker + a Qwen API key; MongoDB runs in a
+container, nothing else to install):
 
 ```bash
-# 1. secrets — copy the template and fill in three values
-cp server/.env.example server/.env
-#    QWEN_API_KEY  (Alibaba Model Studio)  ·  MONGODB_URI  ·  JWT_SECRET
-
-# 2. install everything (root + client + server)
-npm run install:all
-
-# 3. run both servers together (Vite :5173  +  Express :3001)
-npm run dev
+cp .env.example .env      # add QWEN_API_KEY + JWT_SECRET (details below)
+docker compose up -d --build web server mongo
 ```
 
-Then open **`http://localhost:5173`**, register a shop, and tell Kredex:
+Then open **`http://localhost:8080`**.
+
+**Or run it natively** (Node + a local or Atlas MongoDB):
+
+```bash
+cp server/.env.example server/.env   # QWEN_API_KEY · MONGODB_URI · JWT_SECRET
+npm run install:all
+npm run dev                          # Vite :5173 + Express :3001
+```
+
+Then open **`http://localhost:5173`**.
+
+Either way, register a shop and tell Kredex:
 
 ```text
 > sold 3 bags of rice for 4500 each
@@ -181,11 +198,62 @@ Background (cron) / on-demand scan
 
 ## Requirements
 
-- **Node.js 20+** (developed on 24) and npm
-- **MongoDB** — local (`mongodb://127.0.0.1:27017/kredex`) or a free MongoDB Atlas cluster
-- A **Qwen Cloud API key** from Alibaba **Model Studio** (DashScope), OpenAI-compatible endpoint
+The only thing you always need is a **Qwen Cloud API key** — from Alibaba
+**Model Studio** (DashScope), the OpenAI-compatible endpoint. Then pick a path:
 
-## Setup
+- **Docker path (easiest):** Docker + Docker Compose. MongoDB runs in a container.
+- **Native path:** Node.js 20+ (developed on 24), npm, and MongoDB (local or a free
+  Atlas cluster).
+
+Get the API key at the Alibaba Cloud Model Studio console. Use a **pay-as-you-go**
+key (`sk-…`) with the `dashscope-intl` endpoint — a Token-Plan key (`sk-sp-…`) is
+for interactive tools only and will `401` against a backend.
+
+## Run with Docker (easiest)
+
+The whole stack — **nginx (web)**, the **Express API**, and **MongoDB** — is
+containerized, so one command runs everything locally. No Node, no local Mongo.
+
+**1. Configure secrets** — copy the root template and fill in two values:
+
+```bash
+cp .env.example .env
+```
+
+`.env` (repo root) needs only:
+
+| Variable | What to put |
+|---|---|
+| `QWEN_API_KEY` | your `sk-…` key from Alibaba Model Studio |
+| `QWEN_BASE_URL` | leave as the default `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
+| `JWT_SECRET` | any long random string — `openssl rand -hex 32` |
+
+> `MONGODB_URI` is **not** set here — Compose points the API at the bundled Mongo
+> container automatically (`mongodb://mongo:27017/kredex`).
+
+**2. Build and run:**
+
+```bash
+docker compose up -d --build web server mongo
+```
+
+**3. Open http://localhost:8080** and register a shop.
+
+Handy:
+
+```bash
+docker compose ps                 # service status
+docker compose logs -f server     # follow the API logs
+docker compose down               # stop (keeps the mongo_data volume)
+```
+
+> The compose file also defines a `caddy` service for production HTTPS — you can
+> ignore it locally (that's why the command above lists only `web server mongo`).
+> Running the whole stack in production is covered in [Deployment](#deployment).
+
+## Local development (without Docker)
+
+Prefer running the code directly (hot reload, no containers)?
 
 ### 1. Configure environment
 ```bash
@@ -194,7 +262,7 @@ cp server/.env.example server/.env
 Fill in `server/.env`:
 - `QWEN_API_KEY` — from the Alibaba Cloud Model Studio console
 - `QWEN_BASE_URL` — defaults to `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
-- `MONGODB_URI` — local or Atlas connection string
+- `MONGODB_URI` — local (`mongodb://127.0.0.1:27017/kredex`) or Atlas connection string
 - `JWT_SECRET` — a long random string:
   `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 - `PORT` — defaults to `3001`
@@ -244,6 +312,22 @@ Try these in the chat once you're logged in:
 Then open **Autopilot → Run scan now** to see approvals, the restock list, and the
 activity timeline populate.
 
+## Deployment
+
+Kredex is deployed as one Docker Compose stack on a single **Alibaba Cloud** Simple
+Application Server (Singapore). In production a fourth service — **Caddy** — is the
+public entry point: it terminates HTTPS with an auto-renewing Let's Encrypt
+certificate and reverse-proxies to nginx.
+
+```bash
+# on the server, once .env holds QWEN_API_KEY + JWT_SECRET
+docker compose up -d --build     # starts caddy + web + server + mongo
+```
+
+Caddy serves the domain from the [`Caddyfile`](Caddyfile) (`kredex.xyz`). To ship a
+change: `git pull && docker compose up -d --build`. The `mongo_data` volume persists
+across rebuilds. Live at **https://kredex.xyz**.
+
 ## Project layout
 
 ```
@@ -281,7 +365,24 @@ client/src/
   hooks/ · utils/
 ```
 
+## Contributing
+
+Contributions are welcome — bug reports, features, docs, and translations. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide; the short version:
+
+1. **Open an issue** first for anything non-trivial, so we can agree on the approach.
+2. **Fork** the repo and create a branch: `git checkout -b feat/your-thing`.
+3. Get it running with the [Docker](#run-with-docker-easiest) or
+   [native](#local-development-without-docker) path above.
+4. Keep the code style of the surrounding files. Type-check before pushing:
+   `npm --prefix server run build` and `npm --prefix client run typecheck`.
+5. **Open a pull request** describing what changed and why. Link the issue.
+
+Good first areas: more languages/locales beyond English & Pidgin, additional
+currencies, new autopilot scanners, and test coverage. Be respectful and
+constructive — this project exists to help real small businesses.
+
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+**MIT** — free to use, modify, and distribute. See [`LICENSE`](LICENSE).
 ```

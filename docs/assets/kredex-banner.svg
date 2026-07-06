@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 560" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8a6a45" flood-opacity="0.18"/>
+    </filter>
+    <filter id="hero" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#c23a17" flood-opacity="0.30"/>
+    </filter>
+    <linearGradient id="rustg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0603B"/>
+      <stop offset="1" stop-color="#DE3F1B"/>
+    </linearGradient>
+    <linearGradient id="klogo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F15A36"/>
+      <stop offset="1" stop-color="#D83A18"/>
+    </linearGradient>
+    <!-- the actual Kredex logo mark -->
+    <g id="klogo">
+      <path d="M56 28h144c15.5 0 28 12.5 28 28v124c0 15.5-12.5 28-28 28h-39.7l-37.4 27.5c-8.5 6.3-20.6.2-20.6-10.3V208H56c-15.5 0-28-12.5-28-28V56c0-15.5 12.5-28 28-28Z" fill="url(#klogo-bg)"/>
+      <path d="M74 76v100" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round"/>
+      <path d="M94 128 166 76" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M96 130 178 176" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M151 91h29M141 128h38M154 165h24" stroke="#FFDAD1" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+      <circle cx="100" cy="128" r="12" fill="#FFDAD1"/>
+      <path d="M173.5 65.5c17.4 22.8 24.3 55.8 18 85.5-6.5 30.9-26.7 55.5-55.5 67.9l23.9-10.9H200c15.5 0 28-12.5 28-28V56c0-15.5-12.5-28-28-28h-55c10.8 8.7 20.2 21 28.5 37.5Z" fill="#1C1917" opacity=".08"/>
+    </g>
+  </defs>
+
+  <!-- paper background -->
+  <rect width="1280" height="560" fill="#F6F3EC"/>
+
+  <!-- ===================== LEFT: ICON CLUSTER ===================== -->
+  <!-- soft backdrop circles -->
+  <circle cx="298" cy="278" r="212" fill="#EDE7D9"/>
+  <circle cx="298" cy="278" r="212" fill="none" stroke="#E4DCCB" stroke-width="1"/>
+  <circle cx="298" cy="278" r="168" fill="none" stroke="#E4DCCB" stroke-width="1" stroke-dasharray="2 8"/>
+
+  <!-- decorative dots & sparkles -->
+  <circle cx="74" cy="300" r="7" fill="#EB4A26"/>
+  <circle cx="540" cy="330" r="9" fill="#DFD7C6"/>
+  <circle cx="250" cy="458" r="5" fill="#7C5CFF"/>
+  <circle cx="360" cy="70" r="4" fill="#2E9C6E"/>
+  <circle cx="540" cy="176" r="5" fill="#EB4A26"/>
+  <circle cx="150" cy="90" r="4" fill="#E8A13A"/>
+  <g fill="#E8A13A">
+    <path d="M502 196 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 z"/>
+    <path d="M150 470 l2.4 7 7 2.4 -7 2.4 -2.4 7 -2.4 -7 -7 -2.4 7 -2.4 z"/>
+  </g>
+
+  <!-- small card: RECEIPT (top-left) -->
+  <g transform="translate(108,150)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <path d="M22 17 h20 v27 l-3.3 3 -3.3 -3 -3.4 3 -3.3 -3 -3.4 3 V17 z" fill="none" stroke="#EB4A26" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M26 24 h12 M26 30 h12 M26 36 h8" stroke="#211F1B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- small card: CHART (top-right) -->
+  <g transform="translate(420,120)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <path d="M18 46 H46" stroke="#211F1B" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="22" y="34" width="6" height="12" rx="1.5" fill="#EB4A26"/>
+    <rect x="31" y="27" width="6" height="19" rx="1.5" fill="#EB4A26"/>
+    <rect x="40" y="20" width="6" height="26" rx="1.5" fill="#F0603B"/>
+  </g>
+
+  <!-- small card: MEMORY node (top-center) -->
+  <g transform="translate(268,70)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <circle cx="32" cy="32" r="9" fill="none" stroke="#EB4A26" stroke-width="2.2"/>
+    <circle cx="32" cy="32" r="3" fill="#EB4A26"/>
+    <line x1="32" y1="23" x2="32" y2="16" stroke="#211F1B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="40" y1="27" x2="46" y2="22" stroke="#211F1B" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="38" x2="18" y2="44" stroke="#211F1B" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="32" cy="15" r="2.4" fill="#211F1B"/>
+    <circle cx="47" cy="21" r="2.4" fill="#211F1B"/>
+    <circle cx="17" cy="45" r="2.4" fill="#211F1B"/>
+  </g>
+
+  <!-- small card: BELL (lower-left) -->
+  <g transform="translate(120,352)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <path d="M32 18 c-7 0 -11 5 -11 12 v6 l-3 4 h28 l-3 -4 v-6 c0 -7 -4 -12 -11 -12 z" fill="none" stroke="#EB4A26" stroke-width="2.3" stroke-linejoin="round"/>
+    <path d="M28 44 a4 4 0 0 0 8 0" fill="none" stroke="#EB4A26" stroke-width="2.3" stroke-linecap="round"/>
+    <circle cx="32" cy="16" r="2.2" fill="#211F1B"/>
+  </g>
+
+  <!-- small card: WHATSAPP-style chat (lower-right) -->
+  <g transform="translate(410,360)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <path d="M20 22 h24 a4 4 0 0 1 4 4 v11 a4 4 0 0 1 -4 4 H32 l-8 7 v-7 h-4 a4 4 0 0 1 -4 -4 V26 a4 4 0 0 1 4 -4 z" fill="none" stroke="#2E9C6E" stroke-width="2.3" stroke-linejoin="round"/>
+    <circle cx="26" cy="32" r="2.1" fill="#2E9C6E"/>
+    <circle cx="32" cy="32" r="2.1" fill="#2E9C6E"/>
+    <circle cx="38" cy="32" r="2.1" fill="#2E9C6E"/>
+  </g>
+
+  <!-- small card: MIC (right) -->
+  <g transform="translate(470,250)" filter="url(#soft)">
+    <rect width="64" height="64" rx="16" fill="#FFFFFF" stroke="#ECE6D8"/>
+    <rect x="27" y="16" width="10" height="20" rx="5" fill="#EB4A26"/>
+    <path d="M22 33 a10 10 0 0 0 20 0" fill="none" stroke="#211F1B" stroke-width="2.3" stroke-linecap="round"/>
+    <line x1="32" y1="43" x2="32" y2="49" stroke="#211F1B" stroke-width="2.3" stroke-linecap="round"/>
+    <line x1="26" y1="49" x2="38" y2="49" stroke="#211F1B" stroke-width="2.3" stroke-linecap="round"/>
+  </g>
+
+  <!-- HERO: the actual Kredex logo -->
+  <g filter="url(#hero)">
+    <use href="#klogo" transform="translate(224,204) scale(0.58)"/>
+  </g>
+  <!-- approval check badge (autopilot motif) -->
+  <circle cx="356" cy="332" r="17" fill="#2E9C6E" stroke="#F6F3EC" stroke-width="3"/>
+  <path d="M349 332 l5 5 9 -10" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- sparkle -->
+  <path d="M232 224 l2.6 7.4 7.4 2.6 -7.4 2.6 -2.6 7.4 -2.6 -7.4 -7.4 -2.6 7.4 -2.6 z" fill="#E8A13A"/>
+
+  <!-- ===================== RIGHT: LOGO + HEADLINE ===================== -->
+  <!-- logo mark (actual Kredex logo) -->
+  <use href="#klogo" transform="translate(632,110) scale(0.24)"/>
+  <!-- wordmark -->
+  <text x="702" y="152" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700" fill="#211F1B">Kredex</text>
+
+  <!-- headline -->
+  <text x="640" y="252" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#211F1B">Your books.</text>
+  <text x="640" y="320" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#211F1B">On <tspan fill="#EB4A26">autopilot.</tspan></text>
+
+  <!-- sub-headline -->
+  <text x="642" y="364" font-size="19" fill="#3A372F">AI financial autopilot for African small businesses —</text>
+  <text x="642" y="390" font-size="19" fill="#3A372F">talk to it, it remembers, and it acts.</text>
+
+  <!-- tag -->
+  <text x="642" y="430" font-size="14.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">Built for the <tspan fill="#EB4A26">Qwen Cloud</tspan> Hackathon · Autopilot Agent</text>
+</svg>

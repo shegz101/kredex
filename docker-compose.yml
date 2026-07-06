@@ -36,7 +36,11 @@ services:
   web:
     build: ./client
     restart: unless-stopped
-    # no host ports — caddy is the only thing exposed to the internet now
+    # In production, Caddy is the public entry point (80/443). This binding is
+    # loopback-only — private on the server, but it lets you reach the app
+    # directly at http://localhost:8080 when running the stack locally.
+    ports:
+      - "127.0.0.1:8080:80"
     depends_on:
       - server
 
