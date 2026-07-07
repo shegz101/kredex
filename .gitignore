@@ -30,3 +30,12 @@ DEPLOY.md
 # Uploads (local dev)
 uploads/
 tmp/
+
+# docs/assets: only these diagrams belong in the repo. All other assets here
+# (social banners, X header, post cards, clips, article covers) are generated
+# locally for marketing and stay out of git.
+docs/assets/*
+!docs/assets/architecture-overview.png
+!docs/assets/architecture-overview.svg
+!docs/assets/kredex-banner.png
+!docs/assets/kredex-banner.svg

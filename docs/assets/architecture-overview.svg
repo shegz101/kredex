@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1680 940" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#8a6a45" flood-opacity="0.14"/>
+    </filter>
+    <linearGradient id="klogo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F15A36"/><stop offset="1" stop-color="#D83A18"/>
+    </linearGradient>
+    <g id="klogo">
+      <path d="M56 28h144c15.5 0 28 12.5 28 28v124c0 15.5-12.5 28-28 28h-39.7l-37.4 27.5c-8.5 6.3-20.6.2-20.6-10.3V208H56c-15.5 0-28-12.5-28-28V56c0-15.5 12.5-28 28-28Z" fill="url(#klogo-bg)"/>
+      <path d="M74 76v100" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round"/>
+      <path d="M94 128 166 76" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M96 130 178 176" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M151 91h29M141 128h38M154 165h24" stroke="#FFDAD1" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+      <circle cx="100" cy="128" r="12" fill="#FFDAD1"/>
+    </g>
+    <marker id="aGrey" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9A958A"/></marker>
+    <marker id="aRust" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EB4A26"/></marker>
+    <marker id="aPurple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C5CFF"/></marker>
+    <marker id="aGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#25A85B"/></marker>
+  </defs>
+
+  <rect width="1680" height="940" fill="#F6F3EC"/>
+
+  <!-- ===================== HEADER ===================== -->
+  <text x="48" y="52" font-family="Georgia, serif" font-size="30" fill="#211F1B">Kredex — System Architecture</text>
+  <rect x="50" y="62" width="44" height="3" fill="#EB4A26"/>
+  <text x="48" y="86" font-size="14.5" fill="#6E6A61">Conversational · autonomous · memory-driven — an AI financial autopilot for African small businesses, on Alibaba Cloud + Qwen.</text>
+  <!-- verb nav -->
+  <text x="1120" y="40" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#8A857A" letter-spacing="1">TALK  <tspan fill="#EB4A26">→</tspan>  REMEMBER  <tspan fill="#EB4A26">→</tspan>  WATCH  <tspan fill="#EB4A26">→</tspan>  ACT</text>
+  <!-- logo top-right -->
+  <use href="#klogo" transform="translate(1592,20) scale(0.17)"/>
+
+  <!-- ===================== LEFT: ACTOR + ENTRY POINTS ===================== -->
+  <text x="48" y="150" font-size="12" font-weight="700" fill="#EB4A26" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.5">THE SHOP OWNER</text>
+  <g filter="url(#sh)"><rect x="40" y="164" width="216" height="70" rx="16" fill="#FFFFFF" stroke="#E0DACB"/></g>
+  <circle cx="76" cy="199" r="18" fill="#EB4A26"/>
+  <circle cx="76" cy="193" r="5.5" fill="#fff"/>
+  <path d="M67 210 c1 -8 17 -8 18 0 z" fill="#fff"/>
+  <text x="104" y="194" font-size="15" font-weight="600" fill="#211F1B">Micro-business owner</text>
+  <text x="104" y="214" font-size="11.5" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">browser · mobile · voice</text>
+  <text x="104" y="228" font-size="11.5" fill="#6E6A61">English / Nigerian Pidgin</text>
+
+  <!-- entry points -->
+  <g font-size="13" fill="#211F1B">
+    <g filter="url(#sh)"><rect x="40" y="252" width="216" height="52" rx="13" fill="#FFFFFF" stroke="#E4DED0"/></g>
+    <circle cx="62" cy="278" r="4" fill="#EB4A26"/><text x="76" y="275" font-weight="600">Talk</text><text x="76" y="292" font-size="11" fill="#6E6A61">type or speak what happened</text>
+
+    <g filter="url(#sh)"><rect x="40" y="316" width="216" height="52" rx="13" fill="#FFFFFF" stroke="#E4DED0"/></g>
+    <circle cx="62" cy="342" r="4" fill="#EB4A26"/><text x="76" y="339" font-weight="600">Snap</text><text x="76" y="356" font-size="11" fill="#6E6A61">photograph a supplier receipt</text>
+
+    <g filter="url(#sh)"><rect x="40" y="380" width="216" height="52" rx="13" fill="#FFFFFF" stroke="#E4DED0"/></g>
+    <circle cx="62" cy="406" r="4" fill="#2E9C6E"/><text x="76" y="403" font-weight="600">Review</text><text x="76" y="420" font-size="11" fill="#6E6A61">approve what autopilot flags</text>
+
+    <g filter="url(#sh)"><rect x="40" y="444" width="216" height="52" rx="13" fill="#FFFFFF" stroke="#E4DED0"/></g>
+    <circle cx="62" cy="470" r="4" fill="#7C5CFF"/><text x="76" y="467" font-weight="600">Track</text><text x="76" y="484" font-size="11" fill="#6E6A61">dashboard · P&amp;L · opportunities</text>
+  </g>
+
+  <!-- ===================== CENTER: THE KREDEX ENGINE ===================== -->
+  <rect x="300" y="130" width="740" height="440" rx="22" fill="#FCF7F0" stroke="#E0864B" stroke-width="1.5"/>
+  <text x="324" y="162" font-size="12" font-weight="700" fill="#B5540E" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.5">KREDEX ENGINE</text>
+  <text x="324" y="181" font-size="12" fill="#8A857A">Express + TypeScript · agent · semantic memory · autonomous autopilot</text>
+
+  <!-- stage 1: Converse -->
+  <g filter="url(#sh)"><rect x="322" y="198" width="342" height="160" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <circle cx="348" cy="224" r="12" fill="#EB4A26"/><text x="348" y="228" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+  <text x="370" y="222" font-size="15.5" font-weight="600" fill="#211F1B">Converse</text>
+  <text x="370" y="240" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">the AI bookkeeper</text>
+  <text x="342" y="266" font-size="11.5" fill="#3A372F">local classifier → orchestrator (Qwen</text>
+  <text x="342" y="283" font-size="11.5" fill="#3A372F">tool-calling) → tools → MongoDB</text>
+  <text x="342" y="300" font-size="11.5" fill="#3A372F">→ streams the reply (SSE)</text>
+  <text x="342" y="325" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">record_sale · log_stock · record_payment</text>
+  <text x="342" y="341" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">create_invoice · set_reminder · …11 tools</text>
+
+  <!-- stage 2: Remember -->
+  <g filter="url(#sh)"><rect x="676" y="198" width="342" height="160" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <circle cx="702" cy="224" r="12" fill="#EB4A26"/><text x="702" y="228" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+  <text x="724" y="222" font-size="15.5" font-weight="600" fill="#211F1B">Remember</text>
+  <text x="724" y="240" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">the MemoryAgent</text>
+  <text x="696" y="266" font-size="11.5" fill="#3A372F">embed every message (text-embedding-v4,</text>
+  <text x="696" y="283" font-size="11.5" fill="#3A372F">1024-d) · recall relevant facts across</text>
+  <text x="696" y="300" font-size="11.5" fill="#3A372F">sessions (cosine) · prune (forgetting)</text>
+  <text x="696" y="325" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">recalled facts are injected into the prompt —</text>
+  <text x="696" y="341" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">and shape the autopilot's drafts</text>
+
+  <!-- stage 3: Watch -->
+  <g filter="url(#sh)"><rect x="322" y="378" width="342" height="168" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <circle cx="348" cy="404" r="12" fill="#EB4A26"/><text x="348" y="408" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+  <text x="370" y="402" font-size="15.5" font-weight="600" fill="#211F1B">Watch</text>
+  <text x="370" y="420" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">autonomous scanning</text>
+  <text x="342" y="446" font-size="11.5" fill="#3A372F">5-min heartbeat runs each shop on the</text>
+  <text x="342" y="463" font-size="11.5" fill="#3A372F">cadence its owner sets (2 / 6 / 12 / 24h)</text>
+  <text x="342" y="486" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">scans: overdue debts · low stock ·</text>
+  <text x="342" y="502" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">end-of-day summary · due reminders</text>
+  <text x="342" y="526" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">runAutopilotForShop() · runDueShops()</text>
+
+  <!-- stage 4: Act -->
+  <g filter="url(#sh)"><rect x="676" y="378" width="342" height="168" rx="16" fill="#FFFFFF" stroke="#EEC9BB"/></g>
+  <circle cx="702" cy="404" r="12" fill="#EB4A26"/><text x="702" y="408" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+  <text x="724" y="402" font-size="15.5" font-weight="600" fill="#211F1B">Decide &amp; act</text>
+  <text x="724" y="420" font-size="11" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">human-in-the-loop by choice</text>
+  <text x="696" y="446" font-size="11.5" fill="#3A372F">trust level → auto-run the safe stuff,</text>
+  <text x="696" y="463" font-size="11.5" fill="#3A372F">flag the rest · memory-informed drafts</text>
+  <text x="696" y="486" font-size="10.5" fill="#B5540E" font-family="ui-monospace, Menlo, monospace">Suggest · Auto-safe · Full-auto</text>
+  <text x="696" y="509" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">execute (WhatsApp · restock · done)</text>
+  <text x="696" y="525" font-size="10.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">+ record a visible AutopilotRun</text>
+
+  <!-- inner flow arrows -->
+  <line x1="664" y1="278" x2="676" y2="278" stroke="#9A958A" stroke-width="1.6" marker-end="url(#aGrey)"/>
+  <line x1="664" y1="462" x2="676" y2="462" stroke="#9A958A" stroke-width="1.6" marker-end="url(#aGrey)"/>
+  <path d="M847 358 V378" stroke="#7C5CFF" stroke-width="1.6" marker-end="url(#aPurple)" marker-start="url(#aPurple)"/>
+  <text x="855" y="372" font-size="9.5" fill="#7C5CFF" font-family="ui-monospace, Menlo, monospace">memory feeds acts</text>
+
+  <!-- supporting surfaces strip -->
+  <text x="324" y="592" font-size="11" font-weight="700" fill="#8A857A" font-family="ui-monospace, Menlo, monospace" letter-spacing="1">SURFACES</text>
+  <g font-size="11.5" fill="#211F1B">
+    <g filter="url(#sh)"><rect x="300" y="604" width="168" height="44" rx="12" fill="#fff" stroke="#E4DED0"/></g>
+    <text x="316" y="624">Receipt OCR</text><text x="316" y="639" font-size="9.5" fill="#8A857A">qwen-vl-max vision</text>
+    <g filter="url(#sh)"><rect x="478" y="604" width="168" height="44" rx="12" fill="#fff" stroke="#E4DED0"/></g>
+    <text x="494" y="624">Voice in / out</text><text x="494" y="639" font-size="9.5" fill="#8A857A">ASR + TTS</text>
+    <g filter="url(#sh)"><rect x="656" y="604" width="168" height="44" rx="12" fill="#fff" stroke="#E4DED0"/></g>
+    <text x="672" y="624">P&amp;L + Invoices</text><text x="672" y="639" font-size="9.5" fill="#8A857A">reasoning · PDF</text>
+    <g filter="url(#sh)"><rect x="834" y="604" width="184" height="44" rx="12" fill="#fff" stroke="#E4DED0"/></g>
+    <text x="850" y="624">Opportunity Scout</text><text x="850" y="639" font-size="9.5" fill="#8A857A">live web search</text>
+  </g>
+
+  <!-- ===================== RIGHT: EXTERNAL SYSTEMS ===================== -->
+  <text x="1080" y="150" font-size="12" font-weight="700" fill="#4B37B0" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.5">EXTERNAL SYSTEMS</text>
+
+  <!-- Qwen -->
+  <rect x="1072" y="164" width="352" height="222" rx="18" fill="#F1EDFF" stroke="#7C5CFF" stroke-width="1.5"/>
+  <text x="1094" y="192" font-size="13" font-weight="700" fill="#4B37B0">Qwen Cloud</text>
+  <text x="1094" y="209" font-size="11" fill="#8A857A">Alibaba Model Studio · DashScope (OpenAI-compatible)</text>
+  <line x1="1094" y1="220" x2="1402" y2="220" stroke="#D9CFFB"/>
+  <g font-family="ui-monospace, Menlo, monospace">
+    <text x="1094" y="242" font-size="11" fill="#211F1B">qwen3.7-max</text><text x="1402" y="242" font-size="10.5" fill="#6E6A61" text-anchor="end">P&amp;L reasoning</text>
+    <text x="1094" y="264" font-size="11" fill="#211F1B">qwen3.5-flash</text><text x="1402" y="264" font-size="10.5" fill="#6E6A61" text-anchor="end">chat · tools · scout</text>
+    <text x="1094" y="286" font-size="11" fill="#211F1B">qwen-vl-max</text><text x="1402" y="286" font-size="10.5" fill="#6E6A61" text-anchor="end">receipt OCR</text>
+    <text x="1094" y="308" font-size="11" fill="#211F1B">qwen3-asr-flash</text><text x="1402" y="308" font-size="10.5" fill="#6E6A61" text-anchor="end">speech → text</text>
+    <text x="1094" y="330" font-size="11" fill="#211F1B">qwen3-tts-flash</text><text x="1402" y="330" font-size="10.5" fill="#6E6A61" text-anchor="end">text → speech</text>
+    <text x="1094" y="352" font-size="11" fill="#211F1B">text-embedding-v4</text><text x="1402" y="352" font-size="10.5" fill="#6E6A61" text-anchor="end">semantic memory</text>
+  </g>
+  <text x="1094" y="374" font-size="10" fill="#9A958A">one client · seven models · + live web search</text>
+
+  <!-- MongoDB -->
+  <g filter="url(#sh)"><rect x="1072" y="400" width="352" height="66" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <rect x="1090" y="418" width="30" height="30" rx="8" fill="#10A050"/><text x="1105" y="438" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">M</text>
+  <text x="1134" y="428" font-size="14" font-weight="600" fill="#211F1B">MongoDB</text>
+  <text x="1134" y="447" font-size="10.5" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">12 collections + embeddings · persistent volume</text>
+
+  <!-- WhatsApp + Web search -->
+  <g filter="url(#sh)"><rect x="1072" y="480" width="170" height="66" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <rect x="1090" y="498" width="30" height="30" rx="8" fill="#25D366"/><text x="1105" y="518" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">W</text>
+  <text x="1130" y="510" font-size="12.5" font-weight="600" fill="#211F1B">WhatsApp</text>
+  <text x="1130" y="527" font-size="9.5" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">wa.me reminders</text>
+
+  <g filter="url(#sh)"><rect x="1254" y="480" width="170" height="66" rx="16" fill="#FFFFFF" stroke="#E4DED0"/></g>
+  <rect x="1272" y="498" width="30" height="30" rx="8" fill="#E8A13A"/><text x="1287" y="518" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">⌕</text>
+  <text x="1312" y="510" font-size="12.5" font-weight="600" fill="#211F1B">Web search</text>
+  <text x="1312" y="527" font-size="9.5" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">grants · events</text>
+
+  <!-- ===================== CROSS-COLUMN ARROWS ===================== -->
+  <!-- owner talk -> engine -->
+  <path d="M256 278 H322" stroke="#EB4A26" stroke-width="1.8" marker-end="url(#aRust)"/>
+  <text x="266" y="270" font-size="9.5" fill="#EB4A26" font-family="ui-monospace, Menlo, monospace">types/speaks</text>
+  <!-- engine act -> owner review -->
+  <path d="M322 486 H300 Q280 486 280 466 V420 H258" stroke="#2E9C6E" stroke-width="1.8" fill="none" marker-end="url(#aGreen)"/>
+  <text x="262" y="446" font-size="9.5" fill="#2E9C6E" font-family="ui-monospace, Menlo, monospace">flags for you</text>
+  <!-- engine <-> Qwen -->
+  <path d="M1040 262 H1072" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#aPurple)" marker-start="url(#aPurple)"/>
+  <text x="1044" y="254" font-size="9.5" fill="#4B37B0" font-family="ui-monospace, Menlo, monospace">AI calls</text>
+  <!-- engine <-> mongo -->
+  <path d="M1040 432 H1072" stroke="#9A958A" stroke-width="1.7" marker-end="url(#aGrey)" marker-start="url(#aGrey)"/>
+  <text x="1044" y="424" font-size="9.5" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace">read/write</text>
+  <!-- act -> whatsapp -->
+  <path d="M1018 500 Q1045 500 1045 490 V546 H1090 Q1157 546 1157 546" stroke="#25A85B" stroke-width="1.7" fill="none" marker-end="url(#aGreen)"/>
+  <text x="1030" y="492" font-size="9.5" fill="#25A85B" font-family="ui-monospace, Menlo, monospace">reminder</text>
+
+  <!-- ===================== CAPABILITIES STRIP ===================== -->
+  <rect x="40" y="676" width="1600" height="126" rx="20" fill="#FFFFFF" stroke="#E0DACB"/>
+  <text x="64" y="704" font-size="12" font-weight="700" fill="#6E6A61" font-family="ui-monospace, Menlo, monospace" letter-spacing="1.5">FULL CAPABILITY SET</text>
+  <g font-size="11.5" fill="#211F1B">
+    <g transform="translate(64,724)"><circle cx="8" cy="8" r="5" fill="#EB4A26"/><text x="22" y="12">Conversational bookkeeping</text></g>
+    <g transform="translate(300,724)"><circle cx="8" cy="8" r="5" fill="#7C5CFF"/><text x="22" y="12">Persistent semantic memory</text></g>
+    <g transform="translate(536,724)"><circle cx="8" cy="8" r="5" fill="#EB4A26"/><text x="22" y="12">Autonomous autopilot</text></g>
+    <g transform="translate(760,724)"><circle cx="8" cy="8" r="5" fill="#2E9C6E"/><text x="22" y="12">Trust levels + approvals</text></g>
+    <g transform="translate(984,724)"><circle cx="8" cy="8" r="5" fill="#E8A13A"/><text x="22" y="12">Receipt photo OCR</text></g>
+    <g transform="translate(1180,724)"><circle cx="8" cy="8" r="5" fill="#EB4A26"/><text x="22" y="12">Voice (talk + talk-back)</text></g>
+    <g transform="translate(1420,724)"><circle cx="8" cy="8" r="5" fill="#7C5CFF"/><text x="22" y="12">Invoices + PDF</text></g>
+
+    <g transform="translate(64,758)"><circle cx="8" cy="8" r="5" fill="#2E9C6E"/><text x="22" y="12">Profit &amp; Loss analysis</text></g>
+    <g transform="translate(300,758)"><circle cx="8" cy="8" r="5" fill="#E8A13A"/><text x="22" y="12">Opportunity Scout (web search)</text></g>
+    <g transform="translate(536,758)"><circle cx="8" cy="8" r="5" fill="#25D366"/><text x="22" y="12">WhatsApp reminders</text></g>
+    <g transform="translate(760,758)"><circle cx="8" cy="8" r="5" fill="#7C5CFF"/><text x="22" y="12">Dashboard + health score</text></g>
+    <g transform="translate(984,758)"><circle cx="8" cy="8" r="5" fill="#EB4A26"/><text x="22" y="12">Multi-currency (5)</text></g>
+    <g transform="translate(1180,758)"><circle cx="8" cy="8" r="5" fill="#2E9C6E"/><text x="22" y="12">JWT auth · rate limit · cache</text></g>
+    <g transform="translate(1420,758)"><circle cx="8" cy="8" r="5" fill="#EB4A26"/><text x="22" y="12">SSE streaming</text></g>
+  </g>
+
+  <!-- ===================== LEGEND + DEPLOYMENT ===================== -->
+  <g font-size="11" font-family="ui-monospace, Menlo, monospace">
+    <line x1="64" y1="838" x2="92" y2="838" stroke="#EB4A26" stroke-width="2"/><text x="100" y="842" fill="#6E6A61">owner ⇄ agent</text>
+    <line x1="230" y1="838" x2="258" y2="838" stroke="#7C5CFF" stroke-width="2"/><text x="266" y="842" fill="#6E6A61">AI calls → Qwen</text>
+    <line x1="410" y1="838" x2="438" y2="838" stroke="#25A85B" stroke-width="2"/><text x="446" y="842" fill="#6E6A61">autopilot acts / delivers</text>
+    <line x1="628" y1="838" x2="656" y2="838" stroke="#9A958A" stroke-width="2"/><text x="664" y="842" fill="#6E6A61">data read/write</text>
+  </g>
+  <text x="1640" y="842" font-size="11.5" fill="#8A857A" text-anchor="end" font-family="ui-monospace, Menlo, monospace">
+    Deployed on Alibaba Cloud SAS (Singapore) · Docker: Caddy(HTTPS) → nginx → Express → MongoDB · https://kredex.xyz
+  </text>
+</svg>

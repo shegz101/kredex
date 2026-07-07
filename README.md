@@ -160,15 +160,17 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
 
 ## Architecture
 
-Kredex runs as one Docker Compose stack on a single **Alibaba Cloud** Simple
-Application Server, behind **Caddy** (auto-HTTPS). The request path is
-**Browser → Caddy → nginx → Express → MongoDB**, and the Express server reaches
-**Qwen Cloud (Alibaba Model Studio / DashScope)** for every AI call — chat,
-vision, voice, and embeddings — through a single OpenAI-compatible client.
+Kredex is a **conversational, autonomous, memory-driven** agent. The owner *talks*
+(types, speaks, or snaps a receipt); the engine logs it, *remembers* it across
+sessions, and — on a cadence the owner sets — *watches* the shop and *acts* within
+the trust level the owner chose. Every AI call goes to **Qwen** (Alibaba Model
+Studio / DashScope) through one OpenAI-compatible client, and the whole stack is
+deployed on **Alibaba Cloud**.
 
-![Kredex system architecture](docs/assets/architecture.png)
+![Kredex system architecture overview](docs/assets/architecture-overview.png)
 
-> Vector source: [`docs/assets/architecture.svg`](docs/assets/architecture.svg)
+> Deployment: Browser → Caddy (HTTPS) → nginx → Express → MongoDB, on Alibaba Cloud.
+> Vector source: [`architecture-overview.svg`](docs/assets/architecture-overview.svg)
 
 **The Qwen model map** (`server/src/lib/qwen.ts` — one edit swaps a version):
 
