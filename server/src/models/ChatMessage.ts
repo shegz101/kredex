@@ -21,6 +21,7 @@ const chatMessageSchema = new Schema(
     text: { type: String, default: "" },
     intent: { type: String },
     actions: { type: [actionSchema], default: [] },
+    receipt: { type: Schema.Types.Mixed }, // parsed receipt draft {supplier, items, total, committed} — lets the "Log to stock" card survive reloads
   },
   { timestamps: true }
 );

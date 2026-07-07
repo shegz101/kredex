@@ -186,26 +186,26 @@ export default function AutopilotPage() {
       {settings && (
         <section className="rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                disabled={savingSettings}
-                onClick={() => saveSettings({ enabled: !settings.enabled })}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${settings.enabled ? 'bg-[#EB4A26]' : 'bg-zinc-300 dark:bg-zinc-700'}`}
-                aria-label="Toggle autopilot"
-              >
-                <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${settings.enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </button>
-              <div>
+            <div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={savingSettings}
+                  onClick={() => saveSettings({ enabled: !settings.enabled })}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${settings.enabled ? 'bg-[#EB4A26]' : 'bg-zinc-300 dark:bg-zinc-700'}`}
+                  aria-label="Toggle autopilot"
+                >
+                  <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${settings.enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
                 <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                   Autopilot is {settings.enabled ? 'on' : 'off'}
                 </h3>
-                <p className="text-xs text-zinc-500">
-                  {settings.enabled
-                    ? <>Next run {timeUntil(settings.nextRunAt)} · runs every {settings.intervalHours}h</>
-                    : 'Turn on to let Kredex scan and act on a schedule'}
-                </p>
               </div>
+              <p className="mt-1 pl-14 text-xs text-zinc-500">
+                {settings.enabled
+                  ? <>Next run {timeUntil(settings.nextRunAt)} · runs every {settings.intervalHours}h</>
+                  : 'Turn on to let Kredex scan and act on a schedule'}
+              </p>
             </div>
           </div>
 

@@ -182,6 +182,7 @@ export default function ChatPage() {
             intent: m.intent,
             actions: (m.actions ?? []) as Action[],
             pending: false,
+            receipt: (m.receipt as Receipt) ?? undefined,
           })),
         )
       })
@@ -253,13 +254,21 @@ export default function ChatPage() {
         patch(botId, (m) => ({ ...m, pending: false, text: "I couldn't read items off that one — try a clearer, flatter photo." }))
         void api.saveMessage('assistant', "I couldn't read items off that receipt.")
       } else {
+        // persist the receipt draft WITH the message so the "Log to stock" card
+        // survives reloads; adopt the returned DB id so commit can mark it done.
+        const receipt = { ...data, committed: false }
+        const saved = await api.saveMessage(
+          'assistant',
+          "I read your receipt 👇 Check it's right, then log it to your stock.",
+          receipt,
+        )
         patch(botId, (m) => ({
           ...m,
+          id: saved.id ?? m.id,
           pending: false,
           text: "I read your receipt 👇 Check it's right, then log it to your stock.",
-          receipt: { ...data, committed: false },
+          receipt,
         }))
-        void api.saveMessage('assistant', `I read your receipt — found ${data.items.length} item(s): ${data.items.map((it) => it.name).join(', ')}.`)
       }
     } catch (e) {
       patch(botId, (m) => ({ ...m, pending: false, text: e instanceof Error ? e.message : 'Failed to read the receipt.' }))
@@ -273,7 +282,8 @@ export default function ChatPage() {
     try {
       await api.commitReceipt({ supplier: receipt.supplier, items: receipt.items })
       patch(id, (m) => (m.receipt ? { ...m, receipt: { ...m.receipt, committed: true } } : m))
-      void api.saveMessage('assistant', `Logged ${receipt.items.length} item(s) from the receipt to stock.`)
+      // persist the committed state so a reload shows it as logged (and can't re-log)
+      void api.markReceiptCommitted(id)
     } finally {
       setCommittingId(null)
     }

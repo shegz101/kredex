@@ -199,14 +199,6 @@ export interface SettingsData {
   user: { name: string; email: string }
 }
 
-export interface ChatHistoryMessage {
-  id: string
-  role: 'user' | 'assistant'
-  text: string
-  intent?: string
-  actions?: { name: string; result: unknown }[]
-}
-
 export interface ReceiptItem {
   name: string
   quantity: number
@@ -216,6 +208,15 @@ export interface ParsedReceipt {
   supplier: string | null
   items: ReceiptItem[]
   total: number | null
+}
+
+export interface ChatHistoryMessage {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  intent?: string
+  actions?: { name: string; result: unknown }[]
+  receipt?: (ParsedReceipt & { committed?: boolean }) | null
 }
 
 export type ChatEvent =
@@ -270,8 +271,10 @@ export const api = {
   revenue: (range: string) =>
     request<{ series: number[]; labels: string[]; total: number; range: string }>(`/dashboard/revenue?range=${range}`),
   chatHistory: () => request<{ messages: ChatHistoryMessage[] }>('/chat/history'),
-  saveMessage: (role: 'user' | 'assistant', text: string) =>
-    request<{ ok: boolean }>('/chat/message', { method: 'POST', body: { role, text } }),
+  saveMessage: (role: 'user' | 'assistant', text: string, receipt?: unknown) =>
+    request<{ ok: boolean; id?: string }>('/chat/message', { method: 'POST', body: { role, text, receipt } }),
+  markReceiptCommitted: (id: string) =>
+    request<{ ok: boolean }>(`/chat/message/${id}/receipt-committed`, { method: 'PATCH' }),
   settings: () => request<SettingsData>('/settings'),
   updateShop: (body: Partial<ShopSettings>) => request<{ shop: ShopSettings }>('/settings/shop', { method: 'PATCH', body }),
   changePassword: (body: { currentPassword: string; newPassword: string }) =>

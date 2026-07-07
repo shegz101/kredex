@@ -20,6 +20,7 @@ router.get("/history", requireAuth, async (req, res) => {
         text: m.text,
         intent: m.intent,
         actions: m.actions ?? [],
+        receipt: (m as any).receipt ?? null,
       })),
     });
   } catch (err) {
@@ -28,7 +29,7 @@ router.get("/history", requireAuth, async (req, res) => {
   }
 });
 
-const msgSchema = z.object({ role: z.enum(["user", "assistant"]), text: z.string().min(1) });
+const msgSchema = z.object({ role: z.enum(["user", "assistant"]), text: z.string().min(1), receipt: z.any().optional() });
 
 /** POST /api/chat/message — persist a single chat line (used by non-SSE flows like receipt scan). */
 router.post("/message", requireAuth, async (req, res) => {
@@ -38,11 +39,30 @@ router.post("/message", requireAuth, async (req, res) => {
       res.status(400).json({ error: "Invalid message" });
       return;
     }
-    await ChatMessageModel.create({ shopId: req.shopId!, role: parsed.data.role, text: parsed.data.text });
-    res.json({ ok: true });
+    const doc = await ChatMessageModel.create({
+      shopId: req.shopId!,
+      role: parsed.data.role,
+      text: parsed.data.text,
+      receipt: parsed.data.receipt,
+    });
+    res.json({ ok: true, id: String(doc._id) });
   } catch (err) {
     console.error("save message error:", err);
     res.status(500).json({ error: "Failed to save message" });
+  }
+});
+
+/** PATCH /api/chat/message/:id/receipt-committed — mark a saved receipt as logged. */
+router.patch("/message/:id/receipt-committed", requireAuth, async (req, res) => {
+  try {
+    await ChatMessageModel.updateOne(
+      { _id: req.params.id, shopId: req.shopId! },
+      { $set: { "receipt.committed": true } }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("receipt-committed error:", err);
+    res.status(500).json({ error: "Failed to update" });
   }
 });
 
