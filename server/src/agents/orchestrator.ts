@@ -42,6 +42,10 @@ function systemPrompt(shopName: string, currency: string): string {
     `Extract item names, quantities, prices, and customer names from natural sentences. If a sale doesn't say cash or credit, assume cash unless they mention a person taking goods to "pay later".`,
     `After a tool runs, confirm what happened in one or two short sentences. If a tool returns an "error" or "warnings", tell the owner plainly.`,
     `Never invent numbers — only state what the tools return.`,
+    // ---- presentation ----
+    `FORMATTING: Keep replies clean and professional. For multi-column data (e.g. a stock list with quantities and prices, or a list of debts), use a GitHub-style Markdown table with a header row and a |---| divider — it renders as a neat, aligned table. For anything else, use short bold labels and simple "-" bullet points. Do NOT wrap plain sentences in tables.`,
+    `EMOJI: Use them very sparingly and tastefully — at most one small, relevant emoji to lead a section heading, and prefer none. Never sprinkle status emojis like ✅ or ⚠️ inline in tables or after values; say the status in words instead.`,
+    `TONE: Warm, respectful, and professional. Address the owner politely; do not call them "boss". Be concise.`,
   ].join(" ");
 }
 
