@@ -1,8 +1,8 @@
 # Contributing to Kredex
 
-Thanks for your interest in Kredex — an open-source (MIT) AI financial autopilot
-for African small businesses. Contributions of all kinds are welcome: bug reports,
-features, docs, translations, and tests.
+Thanks for your interest in Kredex — an open-source (MIT) AI bookkeeper with
+persistent memory for African small businesses. Contributions of all kinds are
+welcome: bug reports, features, docs, translations, and tests.
 
 ## Ground rules
 
@@ -44,8 +44,8 @@ pay-as-you-go key (`sk-…`) with the `dashscope-intl` endpoint — a Token-Plan
 
 - More languages / locales beyond English & Nigerian Pidgin
 - Additional currencies (formatting + settings)
-- New autopilot scanners (e.g. slow-moving stock, upcoming bills)
-- Test coverage for the agent tools, memory recall, and autopilot scanners
+- Memory strategies — summarization/consolidation, decay tuning, contradiction handling
+- Test coverage for the agent tools, memory extraction, and scored recall
 - Documentation and onboarding polish
 
 ## Project layout

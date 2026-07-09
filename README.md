@@ -1,16 +1,16 @@
-![Kredex — your books, on autopilot](docs/assets/kredex-banner.png)
+![Kredex — the AI bookkeeper that remembers your shop](docs/assets/kredex-banner.png)
 
-# Kredex — AI Financial Autopilot for African Small Businesses
+# Kredex — The AI Bookkeeper That Remembers Your Shop
 
-> An AI agent that runs the books for a micro-business by conversation. The owner
-> just says what happened — in plain English or Nigerian Pidgin, typed or spoken —
-> and Kredex records the sale, tracks the debt, watches the stock, and drafts the
-> reminder. It **remembers** what you tell it across sessions (semantic memory),
-> then **acts on its own** — scanning for overdue debts, low stock, and due
-> reminders — and waits for your **yes** before anything goes out. Every action is
-> shaped by what it remembers and logged on a visible timeline.
+> An AI bookkeeper for African micro-businesses that you run by **conversation** —
+> and that **remembers**. The owner just says what happened (in English or Nigerian
+> Pidgin, typed or spoken) and Kredex records the sale, tracks the debt, and answers
+> questions. Crucially, it distils every conversation into durable, typed memories —
+> your customers' payment habits, your preferences, standing instructions — recalls
+> the **critical few** across sessions, **reinforces** what it uses, and **forgets**
+> what goes stale. So it gets sharper about your shop every day.
 
-Built for the **Global AI Hackathon Series with Qwen Cloud** — **Autopilot Agent** track.
+Built for the **Global AI Hackathon Series with Qwen Cloud** — **MemoryAgent** track.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-EB4A26.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-2E9C6E.svg)
@@ -86,20 +86,21 @@ Either way, register a shop and tell Kredex:
 
 ## Why It Stands Out
 
-Kredex is built for the Autopilot Agent track because it does three things
-together that most "AI bookkeeping" demos don't:
+Kredex is built for the **MemoryAgent** track: a genuine, optimized long-term
+memory architecture — not a chat window with history.
 
-- **It has real, persistent memory — not just a chat window.** Everything the
-  owner tells Kredex is embedded and semantically recalled across sessions, so it
-  behaves like a bookkeeper who actually *knows* your shop and your customers.
-- **It acts autonomously, at the trust level you set.** On a schedule the owner
-  chooses, Kredex scans for overdue debts, low stock, and the day's numbers — then
-  *acts on the safe stuff itself* and *flags the rest* for approval. You pick how
-  much it does on its own (from "ask me everything" to "handle it").
-- **Memory and autopilot are fused.** When Kredex drafts a payment reminder, it
-  uses what it remembers about that customer to set the tone — "always pays late
-  but always pays" produces a patient message, not a pushy one — and shows you the
-  exact memory that shaped it.
+- **Structured memory, not raw logs.** Every conversation is distilled by a model
+  pass into durable, typed memories — *facts*, *preferences*, *events* (e.g.
+  "Tunde pays late but always pays", "owner closes early on Fridays"). Transient
+  transactions are ignored, so memory stays clean and useful.
+- **Optimized retrieval within a limited context window.** Recall scores each
+  memory by **cosine × importance × recency**, then uses **MMR** to select a
+  diverse, non-redundant set under a **token budget** — surfacing the *critical
+  few*, not just the top cosine match.
+- **It learns, and it forgets.** Memories that get recalled are **reinforced**
+  (importance ↑, recency refreshed) so the agent grows more accurate across
+  sessions; near-duplicates **merge**, and the least important, oldest memories are
+  **evicted** past a cap. A built-in **Memory inspector** lets you watch it all.
 
 It speaks the owner's language (English + Nigerian Pidgin, typed **or spoken**),
 reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Studio.
@@ -112,32 +113,18 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
   Tools: `record_sale`, `record_credit_sale`, `record_payment`, `record_expense`,
   `log_stock`, `create_invoice`, `save_customer_phone`, `set_reminder`,
   `query_debts`, `query_stock`, `daily_summary`.
-- **Persistent semantic memory (MemoryAgent)** — every message is embedded with
-  `text-embedding-v4` (1024-dim) and stored; each new turn semantically recalls the
-  most relevant past facts (cosine similarity) and injects them into the agent's
-  context. Bounded by a per-shop cap with oldest-first pruning ("forgetting").
-- **Autonomous autopilot with trust levels** — a 5-minute heartbeat runs each shop
-  on the **cadence its owner sets** (2h / 6h / 12h / 24h) — not a fixed clock. Each
-  run scans for overdue debts, low stock, end-of-day summaries, and due reminders,
-  then acts by the shop's **autonomy level**:
-  - **Suggest** — everything waits for approval.
-  - **Auto-safe** (default) — low-risk actions (restock, day summary) run
-    themselves; anything that messages a customer still asks first.
-  - **Full auto** — the autopilot also resolves customer reminders on its own.
-- **Autopilot runs feed** — every autonomous pass is recorded and shown: what it
-  *detected*, what it *did itself*, and what it *flagged* — e.g. *"Kredex auto-added
-  1 item to restock, logged the day's summary. Flagged 1 debt for your approval."*
-  Proof the agent worked while you were away.
-- **Memory-informed reminder drafting** — overdue-debt reminders are written by
-  Qwen using recalled facts about the customer, tone-matched, with a safe template
-  fallback. The memory used is shown on the card as **"🧠 Kredex remembered: …"**.
-- **Real execution** — a debt reminder opens a free WhatsApp (`wa.me`) message and
-  records it was sent; a low-stock alert puts the item on a **Restock list**; a
-  reminder marks done. Whether that happens automatically or on your tap depends on
-  the trust level.
-- **Approval feed + activity timeline** — anything the autopilot flags lands in a
-  human-in-the-loop approval feed, and a lifecycle timeline (detected → decided +
-  memory used → checkpoint → action) shows the whole loop.
+- **Long-term memory engine (the MemoryAgent core)** — each turn is distilled into
+  typed memories (fact / preference / event) embedded with `text-embedding-v4`
+  (1024-dim). Recall is scored by **cosine × importance × recency**, selected with
+  **MMR** under a token budget, and **reinforced** on use; near-duplicates merge and
+  stale memories are evicted. So the agent recalls the *right* context across
+  sessions without bloating its prompt. (`server/src/services/memory.ts`)
+- **Memory inspector** — a dedicated page shows everything the agent remembers
+  (type, importance, times recalled, last used) plus a **live recall tester**: type
+  a query and watch which memories it retrieves and how strongly they score.
+- **Memory-aware answers** — recalled facts are injected into the agent's context,
+  so Kredex answers and advises with real knowledge of your shop, customers, and
+  habits — and gets more accurate the more you use it.
 - **Receipt photo OCR** — snap a supplier receipt; `qwen-vl-max` extracts
   structured line items to confirm and log.
 - **Voice, both ways** — speak your entries (`qwen3-asr-flash`, speech-to-text) and
@@ -153,19 +140,18 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
   needs-attention panels, and a 0–100 business-health score (Strong / Good / Watch
   / At risk).
 - **Currency-aware everywhere** — NGN / USD / GHS / KES / ZAR propagates across the
-  dashboard, chat, invoices, and autopilot drafts.
+  dashboard, chat, and invoices.
 - **Production hardening** — JWT auth (bcrypt, live email-taken check, password
   reset), rate limiting, SSE-safe gzip compression, in-memory TTL caching, and
   validated environment config.
 
 ## Architecture
 
-Kredex is a **conversational, autonomous, memory-driven** agent. The owner *talks*
-(types, speaks, or snaps a receipt); the engine logs it, *remembers* it across
-sessions, and — on a cadence the owner sets — *watches* the shop and *acts* within
-the trust level the owner chose. Every AI call goes to **Qwen** (Alibaba Model
-Studio / DashScope) through one OpenAI-compatible client, and the whole stack is
-deployed on **Alibaba Cloud**.
+Kredex is a **conversational, memory-driven** agent. The owner *talks* (types,
+speaks, or snaps a receipt); the engine logs it to MongoDB, **distils durable
+memories** from the conversation, and **recalls** the critical few on every new
+turn. Every AI call goes to **Qwen** (Alibaba Model Studio / DashScope) through one
+OpenAI-compatible client, and the whole stack is deployed on **Alibaba Cloud**.
 
 ![Kredex system architecture overview](docs/assets/architecture-overview.png)
 
@@ -186,30 +172,22 @@ deployed on **Alibaba Cloud**.
 
 ## The agent layer
 
-The heart of Kredex is a small, legible loop that fuses **memory** into
-**autonomy**:
+The heart of Kredex is a **memory loop** wrapped around a tool-calling agent:
 
 ```text
 Owner message
   -> local classifier (cheap intent guess, no LLM)
-  -> orchestrator: recall relevant memories  ──►  Qwen (tool-calling)
-       -> run tools against MongoDB
-       -> stream the reply
-  -> remember: embed + store the message for next time
-
-Autopilot run (heartbeat every 5m, per-shop cadence / on-demand)
-  -> detect overdue debt / low stock / EOD summary / due reminder
-  -> draft (memory-informed) each action
-  -> apply trust level: auto-run the safe stuff, flag the rest for approval
-  -> execute (WhatsApp / restock list / done) + record an AutopilotRun
-  -> the owner approves anything that was flagged
+  -> recall(query): score each memory by cosine × importance × recency,
+       MMR-select a diverse set under a token budget, reinforce what's used  ──► inject
+  -> Qwen tool-calling loop -> run tools against MongoDB -> stream the reply
+  -> rememberFromTurn: distil the turn into typed memories
+       (extract facts/preferences/events · dedup & merge · forget the stale)
 ```
 
-- `server/src/agents/orchestrator.ts` — the Qwen tool-calling loop; injects recalled
-  memories into the system prompt.
-- `server/src/services/memory.ts` — `remember()` / `recall()` / `prune()`.
-- `server/src/services/autopilot.ts` — scanners, memory-informed drafting,
-  `executeApproval()`, and `runAutopilotForShop()` / `runDueShops()` (the scheduler).
+- `server/src/agents/orchestrator.ts` — the Qwen tool-calling loop; injects recalled memories into the system prompt.
+- `server/src/services/memory.ts` — the memory engine: `rememberFromTurn()` (extraction), `recall()` (scored + MMR + reinforcement), `forget()` (eviction), `listMemories()`.
+- `server/src/lib/embeddings.ts` — `embed()` + `cosine()`.
+- `server/src/routes/memory.routes.ts` — the Memory inspector API (list, recall preview, forget).
 
 ## Requirements
 
@@ -324,8 +302,8 @@ Try these in the chat once you're logged in:
 > are you making money this month?
 ```
 
-Then open **Autopilot**, set your cadence and trust level, and hit **Run now** to
-see the run recorded and the approvals, restock list, and activity timeline populate.
+Then open **Memory** to see what Kredex has learned about your shop — and use the
+**recall tester** to type a question and watch which memories it retrieves, scored.
 
 ## Deployment
 
@@ -347,14 +325,13 @@ across rebuilds. Live at **https://kredex.xyz**.
 
 ```
 server/src/
-  index.ts             # Express app: middleware, route mounts, autopilot heartbeat
+  index.ts             # Express app: middleware + route mounts
   config/env.ts        # validated environment (fails loud on missing vars)
   agents/
     orchestrator.ts    # Qwen tool-calling agent loop + memory recall injection
     tools.ts           # function-calling tools (record_sale, log_stock, create_invoice…)
   services/
-    memory.ts          # MemoryAgent: remember() / recall() / prune() (embeddings)
-    autopilot.ts       # scanners · memory-informed drafting · autonomy · runAutopilotForShop
+    memory.ts          # the memory engine: rememberFromTurn · recall (scored+MMR) · forget · list
   lib/
     qwen.ts            # one OpenAI-compatible DashScope client + central model map
     embeddings.ts      # embed() + cosine() for semantic memory
@@ -363,8 +340,8 @@ server/src/
     money.ts           # currency formatting        stock.ts     # low-stock helpers
     jwt.ts             # sign/verify tokens          invoicePdf.ts# PDF generation
     db.ts              # Mongoose connection
-  models/              # 12 Mongoose schemas incl. Memory.ts, Approval.ts, AutopilotRun.ts
-  routes/              # auth · chat · dashboard · autopilot · receipt · pnl ·
+  models/              # 10 Mongoose schemas incl. Memory.ts
+  routes/              # auth · chat · memory · dashboard · receipt · pnl ·
                        # invoices · settings · reminders · voice · opportunities
   middleware/auth.ts   # requireAuth (JWT)
 
@@ -372,9 +349,9 @@ client/src/
   Landing.tsx · App.tsx · main.tsx
   pages/               # Login · Register · ForgotPassword
   components/
-    dashboard/         # DashboardPage · ChatPage · AutopilotPage · PnlPage ·
+    dashboard/         # DashboardPage · ChatPage · MemoryPage · PnlPage ·
                        # InvoicesPage · OpportunitiesPage · RemindersPage ·
-                       # SettingsPage · Sidebar · NotificationsDrawer · …
+                       # SettingsPage · Sidebar · …
     Toast.tsx · …
   lib/api.ts           # typed API client (REST + SSE)
   hooks/ · utils/
@@ -394,8 +371,9 @@ Contributions are welcome — bug reports, features, docs, and translations. See
 5. **Open a pull request** describing what changed and why. Link the issue.
 
 Good first areas: more languages/locales beyond English & Pidgin, additional
-currencies, new autopilot scanners, and test coverage. Be respectful and
-constructive — this project exists to help real small businesses.
+currencies, memory strategies (summarization, decay tuning, contradiction handling),
+and test coverage. Be respectful and constructive — this project exists to help real
+small businesses.
 
 ## License
 

@@ -1,6 +1,6 @@
 /**
- * One source of truth for "is this item low?" so the dashboard, autopilot, and
- * chat agent never disagree.
+ * One source of truth for "is this item low?" so the dashboard and chat agent
+ * never disagree.
  *
  * An item is low when its quantity falls to/below its threshold, where the
  * threshold is the item's own `lowStockAt` (if set) or the shop's default.

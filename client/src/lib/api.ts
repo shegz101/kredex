@@ -72,67 +72,21 @@ export interface Reminder {
   createdAt: string
 }
 
-export interface Approval {
-  _id: string
-  kind: 'overdue_debt' | 'low_stock' | 'eod_summary' | 'reminder'
-  title: string
-  body: string
-  draft?: string
-  context?: string
-  status: 'pending' | 'approved' | 'dismissed'
-  result?: string
-  resolvedAt?: string
-  createdAt: string
-  readAt?: string | null
-  payload?: Record<string, unknown>
-}
-
-export interface ApprovalsResponse {
-  pending: Approval[]
-  recent: Approval[]
-}
-
-export interface NotificationsResponse {
-  items: Approval[]
-  unread: number
-}
-
-export interface RestockItem {
+export interface MemoryItem {
   id: string
-  name: string
-  unit: string
-  quantity: number
-  restockQty: number | null
-  supplier: string | null
-  addedAt: string | null
-}
-
-export type Autonomy = 'suggest' | 'auto_safe' | 'full_auto'
-
-export interface AutopilotSettings {
-  enabled: boolean
-  intervalHours: number
-  autonomy: Autonomy
-  lastRunAt: string | null
-  nextRunAt: string | null
-}
-
-export interface AutopilotRunLine {
-  kind: Approval['kind']
-  title: string
-  result?: string
-}
-
-export interface AutopilotRun {
-  _id: string
-  trigger: 'scheduled' | 'manual'
-  detected: { overdueDebts: number; lowStock: number; dueReminders: number; eodSummary: number }
-  autoExecuted: AutopilotRunLine[]
-  pendingApproval: AutopilotRunLine[]
-  autonomy: Autonomy
-  summary: string
+  text: string
+  kind: 'fact' | 'preference' | 'event' | 'chat'
+  importance: number
+  accessCount: number
+  lastAccessedAt: string
+  pinned: boolean
   createdAt: string
 }
+export interface MemoryStats {
+  total: number
+  kinds: Record<string, number>
+}
+
 
 export interface PnlItem {
   name: string
@@ -290,22 +244,11 @@ export const api = {
     request<{ invoice: Invoice }>('/invoices', { method: 'POST', body }),
   setInvoiceStatus: (id: string, status: 'paid' | 'unpaid') =>
     request<{ invoice: Invoice }>(`/invoices/${id}`, { method: 'PATCH', body: { status } }),
-  approvals: () => request<ApprovalsResponse>('/autopilot/approvals'),
-  notifications: () => request<NotificationsResponse>('/autopilot/notifications'),
-  markRead: (id: string) => request<{ unread: number }>('/autopilot/notifications/read', { method: 'POST', body: { id } }),
-  markAllRead: () => request<{ unread: number }>('/autopilot/notifications/read', { method: 'POST' }),
-  scan: () => request<{ pendingCount: number; run: AutopilotRun | null }>('/autopilot/scan', { method: 'POST' }),
-  autopilotSettings: () => request<{ settings: AutopilotSettings }>('/autopilot/settings'),
-  updateAutopilotSettings: (body: Partial<Pick<AutopilotSettings, 'enabled' | 'intervalHours' | 'autonomy'>>) =>
-    request<{ settings: AutopilotSettings }>('/autopilot/settings', { method: 'PUT', body }),
-  autopilotRuns: () => request<{ runs: AutopilotRun[] }>('/autopilot/runs'),
-  approveApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/approve`, { method: 'POST' }),
-  dismissApproval: (id: string) => request<{ approval: Approval }>(`/autopilot/approvals/${id}/dismiss`, { method: 'POST' }),
-  restockList: () => request<{ items: RestockItem[] }>('/autopilot/restock'),
-  markRestocked: (itemId: string) => request<{ ok: true }>(`/autopilot/restock/${itemId}/done`, { method: 'POST' }),
-  timeline: () => request<{ items: Approval[] }>('/autopilot/timeline'),
   commitReceipt: (body: { supplier: string | null; items: ReceiptItem[] }) =>
     request<{ ok: boolean; logged: number }>('/receipt/commit', { method: 'POST', body }),
+  memory: () => request<{ memories: MemoryItem[]; stats: MemoryStats }>('/memory'),
+  memoryRecall: (q: string) => request<{ recalled: { id: string; text: string; score: number }[] }>(`/memory/recall?q=${encodeURIComponent(q)}`),
+  forgetMemory: (id: string) => request<{ ok: true }>(`/memory/${id}/forget`, { method: 'POST' }),
 }
 
 /** Download an invoice PDF (blob fetch so we can send the auth header, then save). */

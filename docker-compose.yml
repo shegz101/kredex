@@ -1,7 +1,7 @@
 # Kredex — all-in-one deployment stack for a single Alibaba Cloud VM.
 #   caddy  → HTTPS termination + auto Let's Encrypt certs (ports 80/443)
 #   web    → nginx serving the React build + reverse-proxying /api
-#   server → Express API (agent, autopilot cron, memory)
+#   server → Express API (agent, long-term memory engine)
 #   mongo  → MongoDB with a persistent named volume
 #
 # Usage on the VM:

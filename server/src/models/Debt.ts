@@ -30,7 +30,6 @@ const debtSchema = new Schema(
     status: { type: String, enum: ["open", "paid", "overdue"], default: "open" },
     dueDate: { type: Date },
     transactionId: { type: Schema.Types.ObjectId, ref: "Transaction" }, // the sale that opened it
-    lastRemindedAt: { type: Date }, // when the autopilot last sent a reminder (set on approve)
   },
   {
     timestamps: true,
@@ -45,7 +44,7 @@ debtSchema.virtual("balance").get(function () {
   return this.amount - paid;
 });
 
-// Common autopilot query: "open/overdue debts for this shop, by due date".
+// Common query: "open/overdue debts for this shop, by due date".
 debtSchema.index({ shopId: 1, status: 1, dueDate: 1 });
 
 export type Debt = InferSchemaType<typeof debtSchema>;

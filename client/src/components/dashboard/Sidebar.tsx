@@ -11,7 +11,7 @@ function initialsOf(name = '') {
 const navItems = [
   { label: 'Dashboard', icon: 'solar:widget-2-linear', to: '/dashboard', end: true },
   { label: 'Chat', icon: 'solar:chat-round-line-linear', to: '/dashboard/chat' },
-  { label: 'Autopilot', icon: 'solar:bolt-circle-linear', to: '/dashboard/autopilot' },
+  { label: 'Memory', icon: 'solar:brain-linear', to: '/dashboard/memory' },
   { label: 'Reminders', icon: 'solar:bell-bing-linear', to: '/dashboard/reminders' },
   { label: 'Profit', icon: 'solar:chart-2-linear', to: '/dashboard/pnl' },
   { label: 'Opportunities', icon: 'solar:rocket-2-linear', to: '/dashboard/opportunities' },

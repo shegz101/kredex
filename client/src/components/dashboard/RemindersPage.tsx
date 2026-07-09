@@ -77,7 +77,7 @@ export default function RemindersPage() {
           </span>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Set a reminder</h2>
-            <p className="text-sm text-zinc-500">Kredex's autopilot nudges you when it's due. (You can also just tell Kredex in chat: "remind me to call Alhaji Friday".)</p>
+            <p className="text-sm text-zinc-500">Kredex nudges you when it's due. (You can also just tell Kredex in chat: "remind me to call Alhaji Friday".)</p>
           </div>
         </div>
         <form onSubmit={add} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">

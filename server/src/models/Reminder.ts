@@ -2,8 +2,7 @@ import { Schema, model, InferSchemaType } from "mongoose";
 
 /**
  * Reminder = a personal nudge the owner sets ("call Alhaji Friday to supply rice",
- * "pay rent on the 30th"). The autopilot watches these and surfaces them in the
- * approval feed / notifications the moment they fall due.
+ * "pay rent on the 30th"), surfaced on the Reminders page when it falls due.
  */
 const reminderSchema = new Schema(
   {
@@ -11,7 +10,6 @@ const reminderSchema = new Schema(
     text: { type: String, required: true, trim: true },
     dueAt: { type: Date, required: true },
     status: { type: String, enum: ["pending", "done", "dismissed"], default: "pending", index: true },
-    notifiedAt: { type: Date, default: null }, // when the autopilot raised it
     doneAt: { type: Date },
   },
   { timestamps: true }

@@ -106,7 +106,8 @@
   <g filter="url(#hero)">
     <use href="#klogo" transform="translate(224,204) scale(0.58)"/>
   </g>
-  <!-- approval check badge (autopilot motif) -->
+  <!-- check badge -->
+
   <circle cx="356" cy="332" r="17" fill="#2E9C6E" stroke="#F6F3EC" stroke-width="3"/>
   <path d="M349 332 l5 5 9 -10" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- sparkle -->
@@ -120,12 +121,12 @@
 
   <!-- headline -->
   <text x="640" y="252" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#211F1B">Your books.</text>
-  <text x="640" y="320" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#211F1B">On <tspan fill="#EB4A26">autopilot.</tspan></text>
+  <text x="640" y="320" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="700" fill="#211F1B">It <tspan fill="#EB4A26">remembers.</tspan></text>
 
   <!-- sub-headline -->
-  <text x="642" y="364" font-size="19" fill="#3A372F">AI financial autopilot for African small businesses —</text>
-  <text x="642" y="390" font-size="19" fill="#3A372F">talk to it, it remembers, and it acts.</text>
+  <text x="642" y="364" font-size="19" fill="#3A372F">The AI bookkeeper with a memory — for African small</text>
+  <text x="642" y="390" font-size="19" fill="#3A372F">businesses. Talk to it; it learns your shop over time.</text>
 
   <!-- tag -->
-  <text x="642" y="430" font-size="14.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">Built for the <tspan fill="#EB4A26">Qwen Cloud</tspan> Hackathon · Autopilot Agent</text>
+  <text x="642" y="430" font-size="14.5" fill="#8A857A" font-family="ui-monospace, Menlo, monospace">Built for the <tspan fill="#EB4A26">Qwen Cloud</tspan> Hackathon · MemoryAgent</text>
 </svg>

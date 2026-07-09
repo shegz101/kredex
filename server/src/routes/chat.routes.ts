@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
 import { runAgent } from "../agents/orchestrator.js";
 import { ChatMessageModel } from "../models/index.js";
-import { remember } from "../services/memory.js";
+import { rememberFromTurn } from "../services/memory.js";
 
 const router = Router();
 
@@ -121,8 +121,8 @@ router.post("/", requireAuth, async (req, res) => {
       actions: actions.map((a) => ({ name: a.name, result: a.result })),
     });
 
-    // MemoryAgent: durably remember what the owner said (embedded for recall)
-    void remember(shopId, message, "chat");
+    // MemoryAgent: distil this turn into durable, typed memories (extraction + dedup)
+    void rememberFromTurn(shopId, message, reply);
 
     send("done", { reply, actions });
   } catch (err) {

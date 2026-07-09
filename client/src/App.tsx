@@ -9,7 +9,7 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import DashboardPage from './components/dashboard/DashboardPage'
 import ChatPage from './components/dashboard/ChatPage'
-import AutopilotPage from './components/dashboard/AutopilotPage'
+import MemoryPage from './components/dashboard/MemoryPage'
 import PnlPage from './components/dashboard/PnlPage'
 import InvoicesPage from './components/dashboard/InvoicesPage'
 import SettingsPage from './components/dashboard/SettingsPage'
@@ -33,7 +33,7 @@ export default function App() {
 
           <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
           <Route path="/dashboard/chat" element={<Protected><ChatPage /></Protected>} />
-          <Route path="/dashboard/autopilot" element={<Protected><AutopilotPage /></Protected>} />
+          <Route path="/dashboard/memory" element={<Protected><MemoryPage /></Protected>} />
           <Route path="/dashboard/pnl" element={<Protected><PnlPage /></Protected>} />
           <Route path="/dashboard/reminders" element={<Protected><RemindersPage /></Protected>} />
           <Route path="/dashboard/opportunities" element={<Protected><OpportunitiesPage /></Protected>} />
