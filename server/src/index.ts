@@ -15,6 +15,7 @@ import remindersRoutes from "./routes/reminders.routes.js";
 import voiceRoutes from "./routes/voice.routes.js";
 import opportunitiesRoutes from "./routes/opportunities.routes.js";
 import memoryRoutes from "./routes/memory.routes.js";
+import notificationsRoutes from "./routes/notifications.routes.js";
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use("/api/opportunities", aiLimiter, opportunitiesRoutes);
 
 // Memory: the agent's long-term memory inspector (list, recall preview, forget)
 app.use("/api/memory", memoryRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 async function start() {
   try {

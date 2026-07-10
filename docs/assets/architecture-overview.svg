@@ -1,69 +1,207 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 1010" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
-<defs><filter id="sh" x="-8%" y="-8%" width="116%" height="122%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#8a6a45" flood-opacity="0.14"/></filter><linearGradient id="kbg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#F15A36"/><stop offset="1" stop-color="#D83A18"/></linearGradient><g id="klogo"><path d="M56 28h144c15.5 0 28 12.5 28 28v124c0 15.5-12.5 28-28 28h-39.7l-37.4 27.5c-8.5 6.3-20.6.2-20.6-10.3V208H56c-15.5 0-28-12.5-28-28V56c0-15.5 12.5-28 28-28Z" fill="url(#kbg)"/><path d="M74 76v100" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round"/><path d="M94 128 166 76" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M96 130 178 176" stroke="#FFF8F4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M151 91h29M141 128h38M154 165h24" stroke="#FFDAD1" stroke-width="10" stroke-linecap="round" opacity=".9"/><circle cx="100" cy="128" r="12" fill="#FFDAD1"/></g><marker id="a9A958A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9A958A"/></marker><marker id="a7C5CFF" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C5CFF"/></marker><marker id="a0E9C5A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0E9C5A"/></marker><marker id="aEB4A26" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#EB4A26"/></marker><marker id="aC67A12" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C67A12"/></marker><marker id="aE0463A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E0463A"/></marker></defs>
-<rect width="1760" height="1010" fill="#F6F3EC"/>
-<text x="40" y="46" font-size="29" fill="#211F1B" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="start">Kredex — System Architecture</text>
-<rect x="42" y="56" width="44" height="3" fill="#EB4A26"/>
-<text x="40" y="80" font-size="13.5" fill="#6E6A61" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="start">Request flow across the client, the Express server, the Qwen models, and MongoDB — how every component connects.</text>
-<use href="#klogo" transform="translate(1680,16) scale(0.15)"/>
-<rect x="40" y="100" width="1680" height="150" rx="18" fill="#F1EDFF" stroke="#7C5CFF" stroke-width="1.4"/>
-<text x="60" y="128" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="700" text-anchor="start">QWEN CLOUD</text>
-<text x="60" y="146" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">Alibaba Model Studio · DashScope</text>
-<text x="60" y="168" font-size="10" fill="#9A88E0" font-family="ui-monospace,Menlo,monospace" text-anchor="start">one OpenAI-compatible client</text>
-<text x="60" y="183" font-size="10" fill="#9A88E0" font-family="ui-monospace,Menlo,monospace" text-anchor="start">— the route + intent picks</text>
-<text x="60" y="198" font-size="10" fill="#9A88E0" font-family="ui-monospace,Menlo,monospace" text-anchor="start">which model runs</text>
-<g filter="url(#sh)"><rect x="727" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="805" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">qwen3.5-flash</text>
-<text x="805" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">chat · tools</text>
-<g filter="url(#sh)"><rect x="919" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="997" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">text-embedding-v4</text>
-<text x="997" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">memory · cosine</text>
-<g filter="url(#sh)"><rect x="1081" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="1159" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">qwen-vl-max</text>
-<text x="1159" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">receipt OCR</text>
-<g filter="url(#sh)"><rect x="1243" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="1321" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">qwen3-asr / tts</text>
-<text x="1321" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">voice ⇄ text</text>
-<g filter="url(#sh)"><rect x="1405" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="1483" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">qwen3.7-max</text>
-<text x="1483" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">P&amp;L reasoning</text>
-<g filter="url(#sh)"><rect x="1567" y="150" width="156" height="76" rx="12" fill="#fff" stroke="#E3DBF6"/></g>
-<text x="1645" y="178" font-size="12" fill="#4B37B0" font-family="ui-monospace,Menlo,monospace" font-weight="600" text-anchor="middle">web search</text>
-<text x="1645" y="200" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">grants · events</text>
-<rect x="40" y="862" width="1680" height="120" rx="18" fill="#E4F5EA" stroke="#0E9C5A" stroke-width="1.4"/>
-<rect x="60" y="892" width="34" height="34" rx="9" fill="#10A050"/>
-<text x="77" y="914" font-size="15" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="700" text-anchor="middle">M</text>
-<text x="108" y="908" font-size="15" fill="#211F1B" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="700" text-anchor="start">MongoDB</text>
-<text x="108" y="930" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">one connection (Mongoose) · persistent volume</text>
-<text x="470" y="900" font-size="10.5" fill="#2f7d54" font-family="ui-monospace,Menlo,monospace" text-anchor="start">users · shops · customers · inventoryitems · debts · transactions</text>
-<text x="470" y="918" font-size="10.5" fill="#2f7d54" font-family="ui-monospace,Menlo,monospace" text-anchor="start">invoices · reminders · chatmessages · memories</text>
-<g filter="url(#sh)"><rect x="56" y="360" width="150" height="150" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="56" y="360" width="150" height="26" rx="14" fill="#9A958A"/><rect x="56" y="373" width="150" height="13" fill="#9A958A"/><text x="131.0" y="378" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Client</text><text x="68" y="404" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">React 19 SPA</text><text x="68" y="420" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">Vite · SSE</text><text x="68" y="436" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">JWT in header</text><text x="68" y="452" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">chat · dashboard</text><text x="68" y="468" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">memory · voice</text>
-<g filter="url(#sh)"><rect x="232" y="360" width="214" height="150" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="232" y="360" width="214" height="26" rx="14" fill="#9A958A"/><rect x="232" y="373" width="214" height="13" fill="#9A958A"/><text x="339.0" y="378" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Edge + Gateway</text><text x="244" y="404" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">Caddy TLS → nginx</text><text x="244" y="420" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">compression (SSE-safe)</text><text x="244" y="436" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">CORS · express.json</text><text x="244" y="452" font-size="10.5" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="start">rate limit · requireAuth</text><text x="244" y="468" font-size="10.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">JWT → req.shopId</text>
-<g filter="url(#sh)"><rect x="472" y="360" width="150" height="150" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="472" y="360" width="150" height="26" rx="14" fill="#EB4A26"/><rect x="472" y="373" width="150" height="13" fill="#EB4A26"/><text x="547.0" y="378" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Router</text><text x="484" y="404" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">Express</text><text x="484" y="420" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">11 route groups</text><text x="484" y="436" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">dispatch to</text><text x="484" y="452" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">handlers</text>
-<line x1="206" y1="435" x2="232" y2="435" stroke="#9A958A" stroke-width="1.9" marker-end="url(#a9A958A)" marker-start="url(#a9A958A)"/>
-<line x1="446" y1="435" x2="472" y2="435" stroke="#9A958A" stroke-width="1.9" marker-end="url(#a9A958A)" marker-start="url(#a9A958A)"/>
-<line x1="622" y1="432" x2="700" y2="430" stroke="#EB4A26" stroke-width="1.9" marker-end="url(#aEB4A26)" marker-start="url(#aEB4A26)"/><text x="905" y="352" font-size="10" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">POST /chat (SSE)  +  REST → each handler</text>
-<line x1="339" y1="510" x2="339" y2="548" stroke="#E0463A" stroke-width="1.9" marker-end="url(#aE0463A)"/>
-<rect x="250" y="548" width="196" height="30" rx="8" fill="#FCE8E6" stroke="#F3C6C1"/>
-<text x="348" y="568" font-size="10" fill="#E0463A" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">reject → 429 · 401 · 400 · 422</text>
-<g filter="url(#sh)"><rect x="56" y="600" width="390" height="96" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="56" y="600" width="390" height="26" rx="14" fill="#7C5CFF"/><rect x="56" y="613" width="390" height="13" fill="#7C5CFF"/><text x="251.0" y="618" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Memory engine · the MemoryAgent core</text><text x="68" y="644" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">rememberFromTurn(): distil turn → typed memories</text><text x="68" y="660" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">recall(): cosine × importance × recency → MMR + budget</text><text x="68" y="676" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">reinforce on use · dedup-merge · forget the stale</text>
-<line x1="250" y1="696" x2="250" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/><text x="250" y="806" font-size="9.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">read/write</text>
-<g filter="url(#sh)"><rect x="56" y="716" width="390" height="110" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="56" y="716" width="390" height="26" rx="14" fill="#9A958A"/><rect x="56" y="729" width="390" height="13" fill="#9A958A"/><text x="251.0" y="734" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Error handling · fails safe, not silently</text><text x="68" y="760" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">env.ts validates config at boot — missing QWEN_API_KEY /</text><text x="68" y="776" font-size="10.5" fill="#E0463A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">MONGODB_URI / JWT_SECRET → clear msg + process.exit(1)</text><text x="68" y="792" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">connectDB try/catch → /health survives a DB outage</text><text x="68" y="808" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">every route try/catch → JSON {error} + HTTP status</text>
-<g filter="url(#sh)"><rect x="700.0" y="340" width="210" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="700.0" y="340" width="210" height="26" rx="14" fill="#EB4A26"/><rect x="700.0" y="353" width="210" height="13" fill="#EB4A26"/><text x="805.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Agent core</text><text x="712.0" y="381" font-size="9.5" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="start">POST /chat</text><text x="712.0" y="397" font-size="10.5" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="start">classify() intent</text><text x="712.0" y="413" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">qwen3.5-flash</text><text x="712.0" y="429" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">tool-loop (≤4)</text><text x="712.0" y="445" font-size="10.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">executeTool→DB</text><text x="712.0" y="461" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">stream reply</text><text x="712.0" y="477" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">tools: record_sale,</text><text x="712.0" y="493" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">create_invoice,</text><text x="712.0" y="509" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">set_reminder…</text>
-<line x1="805" y1="340" x2="805" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<line x1="805" y1="640" x2="805" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/>
-<g filter="url(#sh)"><rect x="922.0" y="340" width="150" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="922.0" y="340" width="150" height="26" rx="14" fill="#7C5CFF"/><rect x="922.0" y="353" width="150" height="13" fill="#7C5CFF"/><text x="997.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Memory</text><text x="934.0" y="381" font-size="9.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">RAG</text><text x="934.0" y="397" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">remember / recall</text><text x="934.0" y="413" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">embed(text)</text><text x="934.0" y="429" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">→ cosine() vs</text><text x="934.0" y="445" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">300 recent</text><text x="934.0" y="461" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">≥0.40 → top-5</text><text x="934.0" y="477" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">→ into prompt</text>
-<line x1="997" y1="340" x2="997" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<line x1="997" y1="640" x2="997" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/>
-<g filter="url(#sh)"><rect x="1084.0" y="340" width="150" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="1084.0" y="340" width="150" height="26" rx="14" fill="#C67A12"/><rect x="1084.0" y="353" width="150" height="13" fill="#C67A12"/><text x="1159.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Receipt OCR</text><text x="1096.0" y="381" font-size="9.5" fill="#C67A12" font-family="ui-monospace,Menlo,monospace" text-anchor="start">POST /receipt</text><text x="1096.0" y="397" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">multer → base64</text><text x="1096.0" y="413" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">qwen-vl-max</text><text x="1096.0" y="429" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">reads image →</text><text x="1096.0" y="445" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">items{name,qty}</text><text x="1096.0" y="461" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">owner confirms</text><text x="1096.0" y="477" font-size="10.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">→ record_sale</text>
-<line x1="1159" y1="340" x2="1159" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<line x1="1159" y1="640" x2="1159" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/>
-<g filter="url(#sh)"><rect x="1246.0" y="340" width="150" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="1246.0" y="340" width="150" height="26" rx="14" fill="#7C5CFF"/><rect x="1246.0" y="353" width="150" height="13" fill="#7C5CFF"/><text x="1321.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Voice</text><text x="1258.0" y="381" font-size="9.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">POST /voice</text><text x="1258.0" y="397" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">/transcribe:</text><text x="1258.0" y="413" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">qwen3-asr-flash</text><text x="1258.0" y="429" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">/speak:</text><text x="1258.0" y="445" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">qwen3-tts-flash</text><text x="1258.0" y="461" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">transcript →</text><text x="1258.0" y="477" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">chat</text>
-<line x1="1321" y1="340" x2="1321" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<g filter="url(#sh)"><rect x="1408.0" y="340" width="150" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="1408.0" y="340" width="150" height="26" rx="14" fill="#7C5CFF"/><rect x="1408.0" y="353" width="150" height="13" fill="#7C5CFF"/><text x="1483.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Analytics</text><text x="1420.0" y="381" font-size="9.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">/pnl · /dashboard</text><text x="1420.0" y="397" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">P&amp;L: aggregate</text><text x="1420.0" y="413" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">revenue·COGS·exp</text><text x="1420.0" y="429" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">→ qwen3.7-max</text><text x="1420.0" y="445" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">Health: 70 +15</text><text x="1420.0" y="461" font-size="10.5" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="start">−10·overdue</text><text x="1420.0" y="477" font-size="10.5" fill="#EB4A26" font-family="ui-monospace,Menlo,monospace" text-anchor="start">−5·lowstock</text>
-<line x1="1483" y1="340" x2="1483" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<line x1="1483" y1="640" x2="1483" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/>
-<g filter="url(#sh)"><rect x="1570.0" y="340" width="150" height="300" rx="14" fill="#fff" stroke="#E7E1D3"/></g><rect x="1570.0" y="340" width="150" height="26" rx="14" fill="#C67A12"/><rect x="1570.0" y="353" width="150" height="13" fill="#C67A12"/><text x="1645.0" y="358" font-size="12" fill="#fff" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" text-anchor="middle">Opportunity Scout</text><text x="1582.0" y="381" font-size="9.5" fill="#C67A12" font-family="ui-monospace,Menlo,monospace" text-anchor="start">/opportunities</text><text x="1582.0" y="397" font-size="10.5" fill="#6E6A61" font-family="ui-monospace,Menlo,monospace" text-anchor="start">shop.location →</text><text x="1582.0" y="413" font-size="10.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">cacheGet(key)</text><text x="1582.0" y="429" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,monospace" text-anchor="start">miss → flash +</text><text x="1582.0" y="445" font-size="10.5" fill="#C67A12" font-family="ui-monospace,Menlo,monospace" text-anchor="start">forced web search</text><text x="1582.0" y="461" font-size="10.5" fill="#211F1B" font-family="ui-monospace,Menlo,monospace" text-anchor="start">JSON + sourceUrl</text><text x="1582.0" y="477" font-size="10.5" fill="#0E9C5A" font-family="ui-monospace,Menlo,monospace" text-anchor="start">cacheSet 10min</text>
-<line x1="1645" y1="340" x2="1645" y2="232" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#a7C5CFF)" marker-start="url(#a7C5CFF)"/>
-<line x1="1645" y1="640" x2="1645" y2="862" stroke="#0E9C5A" stroke-width="1.9" marker-end="url(#a0E9C5A)" marker-start="url(#a0E9C5A)"/>
-<line x1="1246" y1="594" x2="915" y2="594" stroke="#9A958A" stroke-width="1.9" marker-end="url(#a9A958A)"/><text x="1080" y="588" font-size="9" fill="#9A958A" font-family="ui-monospace,Menlo,monospace" text-anchor="middle">transcript → chat</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 1240" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+<defs>
+<filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#8a6a45" flood-opacity="0.16"/></filter>
+<marker id="h57524A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#57524A"/></marker>
+<marker id="h7C5CFF" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7C5CFF"/></marker>
+<marker id="hC67A12" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#C67A12"/></marker>
+<marker id="h2E9C6E" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2E9C6E"/></marker>
+<marker id="hEB4A26" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#EB4A26"/></marker>
+</defs>
+<rect width="1760" height="1240" fill="#F5F1E8"/>
+<text x="48" y="52" font-size="30" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="700">Kredex — System Architecture</text>
+<text x="50" y="80" font-size="14" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">React SPA  →  Caddy / nginx  →  Express API  →  Agent Orchestrator  →  Qwen (Model Studio) + MongoDB.</text>
+<text x="50" y="100" font-size="13" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">The MemoryAgent adds a typed, vector long-term memory with scored + MMR retrieval that the agent reads before every reply and writes after every turn.</text>
+<g filter="url(#sh)"><rect x="40" y="175" width="180" height="250" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M40 197 v-8 a14 14 0 0 1 14 -14 h152 a14 14 0 0 1 14 14 v8 z" fill="#EB4A26"/>
+<text x="130.0" y="193" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Client · Browser</text>
+<text x="54" y="219" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">React 19 + Vite SPA</text>
+<text x="54" y="236" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">Chat (SSE stream)</text>
+<text x="54" y="253" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">Dashboard · P&amp;L</text>
+<text x="54" y="270" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">Memory Inspector</text>
+<text x="54" y="287" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">Voice record / play</text>
+<text x="54" y="304" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">JWT Bearer · dark UI</text>
+<g filter="url(#sh)"><rect x="268" y="180" width="150" height="66" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M268 202 v-8 a14 14 0 0 1 14 -14 h122 a14 14 0 0 1 14 14 v8 z" fill="#6E6A61"/>
+<text x="343.0" y="198" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Caddy</text>
+<text x="282" y="224" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">TLS · Let's Encrypt</text>
+<text x="282" y="241" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">:443</text>
+<g filter="url(#sh)"><rect x="268" y="262" width="150" height="104" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M268 284 v-8 a14 14 0 0 1 14 -14 h122 a14 14 0 0 1 14 14 v8 z" fill="#6E6A61"/>
+<text x="343.0" y="280" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">nginx</text>
+<text x="282" y="306" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">serves SPA build</text>
+<text x="282" y="323" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">reverse-proxy /api</text>
+<text x="282" y="340" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">gzip · caching</text>
+<rect x="458" y="150" width="292" height="292" rx="18" fill="none" stroke="#EB4A26" stroke-width="1.4" stroke-dasharray="3 7" opacity="0.9"/>
+<rect x="476" y="137" width="248.0" height="26" rx="13" fill="#EB4A26"/>
+<text x="600.0" y="154" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">API · Express (TypeScript ESM)</text>
+<g filter="url(#sh)"><rect x="474" y="178" width="260" height="78" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M474 200 v-8 a14 14 0 0 1 14 -14 h232 a14 14 0 0 1 14 14 v8 z" fill="#EB4A26"/>
+<text x="604.0" y="196" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Middleware</text>
+<text x="488" y="222" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">JWT auth · CORS · JSON 2mb</text>
+<text x="488" y="239" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">rate-limit: api 150/min</text>
+<text x="488" y="256" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">ai routes 25/min</text>
+<g filter="url(#sh)"><rect x="474" y="270" width="260" height="158" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M474 292 v-8 a14 14 0 0 1 14 -14 h232 a14 14 0 0 1 14 14 v8 z" fill="#EB4A26"/>
+<text x="604.0" y="288" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Route handlers</text>
+<text x="488" y="314" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">/auth   /chat (SSE)   /memory</text>
+<text x="488" y="331" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">/dashboard  /invoices</text>
+<text x="488" y="348" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">/reminders  /settings</text>
+<text x="488" y="365" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">/receipt  /voice  /pnl</text>
+<text x="488" y="382" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">/opportunities</text>
+<g filter="url(#sh)"><rect x="820" y="165" width="384" height="214" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M820 187 v-8 a14 14 0 0 1 14 -14 h356 a14 14 0 0 1 14 14 v8 z" fill="#EB4A26"/>
+<text x="1012.0" y="183" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Agent Orchestrator — POST /api/chat</text>
+<text x="834" y="209" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">1 · classify() intent  (local, no LLM)</text>
+<text x="834" y="226" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">2 · recall(msg, k=5) → inject memories</text>
+<text x="834" y="243" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">3 · context: system + memories + history + msg</text>
+<text x="834" y="260" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">4 · tool-loop ≤4 · qwen3.5-flash ⇄ tools</text>
+<text x="834" y="277" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">5 · stream reply · SSE tokens</text>
+<text x="834" y="294" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">6 · rememberFromTurn()  · async</text>
+<rect x="1240" y="150" width="480" height="372" rx="18" fill="none" stroke="#C67A12" stroke-width="1.4" stroke-dasharray="3 7" opacity="0.9"/>
+<rect x="1258" y="137" width="453.2" height="26" rx="13" fill="#C67A12"/>
+<text x="1484.6" y="154" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Qwen Cloud · Model Studio (DashScope · OpenAI-compatible)</text>
+<g filter="url(#sh)"><rect x="1262" y="182" width="436" height="62" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M1262 204 v-8 a14 14 0 0 1 14 -14 h408 a14 14 0 0 1 14 14 v8 z" fill="#C67A12"/>
+<text x="1480.0" y="200" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">qwen3.5-flash</text>
+<text x="1276" y="226" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">agent loop · tool calls · memory extraction</text>
+<g filter="url(#sh)"><rect x="1262" y="254" width="436" height="52" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M1262 276 v-8 a14 14 0 0 1 14 -14 h408 a14 14 0 0 1 14 14 v8 z" fill="#C67A12"/>
+<text x="1480.0" y="272" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">qwen3.7-max</text>
+<text x="1276" y="298" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">deep reasoning · P&amp;L analysis · /api/pnl</text>
+<g filter="url(#sh)"><rect x="1262" y="314" width="436" height="52" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M1262 336 v-8 a14 14 0 0 1 14 -14 h408 a14 14 0 0 1 14 14 v8 z" fill="#C67A12"/>
+<text x="1480.0" y="332" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">qwen-vl-max</text>
+<text x="1276" y="358" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">receipt OCR → structured items · /api/receipt</text>
+<g filter="url(#sh)"><rect x="1262" y="374" width="436" height="52" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M1262 396 v-8 a14 14 0 0 1 14 -14 h408 a14 14 0 0 1 14 14 v8 z" fill="#C67A12"/>
+<text x="1480.0" y="392" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">qwen3-asr-flash · qwen3-tts-flash</text>
+<text x="1276" y="418" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">voice STT + TTS · /api/voice</text>
+<g filter="url(#sh)"><rect x="1262" y="434" width="436" height="66" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M1262 456 v-8 a14 14 0 0 1 14 -14 h408 a14 14 0 0 1 14 14 v8 z" fill="#7C5CFF"/>
+<text x="1480.0" y="452" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">text-embedding-v4</text>
+<text x="1276" y="478" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">1024-d embeddings · powers memory vectors</text>
+<g filter="url(#sh)"><rect x="40" y="720" width="330" height="150" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/></g>
+<path d="M40 742 v-8 a14 14 0 0 1 14 -14 h302 a14 14 0 0 1 14 14 v8 z" fill="#2E9C6E"/>
+<text x="205.0" y="738" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">Agent tools → executeTool()</text>
+<text x="54" y="764" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">log_stock · record_sale</text>
+<text x="54" y="781" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">record_payment · record_expense</text>
+<text x="54" y="798" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">create_invoice · set_reminder</text>
+<text x="54" y="815" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="start" font-weight="400">save_customer_phone</text>
+<rect x="470" y="545" width="1250" height="362" rx="18" fill="none" stroke="#7C5CFF" stroke-width="1.4" stroke-dasharray="3 7" opacity="0.9"/>
+<rect x="488" y="532" width="552.0" height="26" rx="13" fill="#7C5CFF"/>
+<text x="764.0" y="549" font-size="12.5" fill="#fff" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="600">MemoryAgent · long-term memory engine  (server/src/services/memory.ts)</text>
+<text x="492" y="592" font-size="12" fill="#7C5CFF" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="700">WRITE · remember  (distil → dedup → store → forget)</text>
+<g filter="url(#sh)"><rect x="492" y="606" width="168" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="492" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="576.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">rememberFromTurn()</text>
+<text x="576.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">distil the turn</text>
+<g filter="url(#sh)"><rect x="676" y="606" width="176" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="676" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="764.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">extract</text>
+<text x="764.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">typed mems · qwen3.5-flash</text>
+<path d="M660 647.0 L676 647.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="868" y="606" width="138" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="868" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="937.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">embed</text>
+<text x="937.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">text-embedding-v4</text>
+<path d="M852 647.0 L868 647.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1022" y="606" width="190" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1022" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1117.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">dedup / merge</text>
+<text x="1117.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">cosine ≥ 0.82 → reinforce</text>
+<path d="M1006 647.0 L1022 647.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1228" y="606" width="104" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1228" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1280.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">store</text>
+<text x="1280.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">→ memories</text>
+<path d="M1212 647.0 L1228 647.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1348" y="606" width="196" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1348" y="606" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1446.0" y="636" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">forget</text>
+<text x="1446.0" y="656" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">cap 600 · evict lowest</text>
+<path d="M1332 647.0 L1348 647.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<text x="492" y="726" font-size="12" fill="#7C5CFF" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="700">READ · recall  (embed → score → gate → MMR → reinforce)</text>
+<g filter="url(#sh)"><rect x="492" y="740" width="150" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="492" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="567.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">embed query</text>
+<text x="567.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">text-embedding-v4</text>
+<g filter="url(#sh)"><rect x="662" y="740" width="158" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="662" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="741.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">fetch</text>
+<text x="741.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">≤400 active · pre-sorted</text>
+<path d="M642 781.0 L662 781.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="840" y="740" width="196" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="840" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="938.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">score</text>
+<text x="938.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">cosine × importance × recency</text>
+<path d="M820 781.0 L840 781.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1056" y="740" width="112" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1056" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1112.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">gate</text>
+<text x="1112.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">sim ≥ 0.36</text>
+<path d="M1036 781.0 L1056 781.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1188" y="740" width="168" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1188" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1272.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">MMR select</text>
+<text x="1272.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">λ=0.72 · ≤720 chars · k≤6</text>
+<path d="M1168 781.0 L1188 781.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)"><rect x="1376" y="740" width="182" height="82" rx="12" fill="#FFFFFF" stroke="#7C5CFF" stroke-width="1.6"/></g>
+<rect x="1376" y="740" width="5" height="82" rx="2.5" fill="#7C5CFF"/>
+<text x="1467.0" y="770" font-size="12.5" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">reinforce</text>
+<text x="1467.0" y="790" font-size="10" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">importance↑ · recency refresh</text>
+<path d="M1356 781.0 L1376 781.0" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<g filter="url(#sh)">
+<path d="M590 990 v110 a280.0 20 0 0 0 560 0 v-110" fill="#FFFFFF" stroke="#E1D9C8"/>
+<ellipse cx="870.0" cy="990" rx="280.0" ry="20" fill="#FFFFFF" stroke="#E1D9C8"/>
+</g>
+<ellipse cx="870.0" cy="990" rx="280.0" ry="20" fill="none" stroke="#2E9C6E" stroke-width="1.6"/>
+<text x="870.0" y="995" font-size="13" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="middle" font-weight="700">MongoDB · Mongoose</text>
+<text x="870" y="1024" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">users · shops · customers</text>
+<text x="870" y="1042" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">inventoryitems · debts · transactions</text>
+<text x="870" y="1060" font-size="11" fill="#6E6A61" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="400">invoices · reminders · chatmessages</text>
+<text x="870" y="1080" font-size="11" fill="#7C5CFF" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="700">memories  —  vector + importance / recency / accessCount</text>
+<path d="M220 300 L268 300" fill="none" stroke="#57524A" stroke-width="1.9" marker-end="url(#h57524A)" marker-start="url(#h57524A)"/>
+<rect x="203.35" y="282.0" width="81.3" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="244.0" y="295.0" font-size="10.5" fill="#57524A" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">HTTPS · JWT</text>
+<path d="M418 314 L458 320" fill="none" stroke="#57524A" stroke-width="1.9" marker-end="url(#h57524A)" marker-start="url(#h57524A)"/>
+<rect x="419.4" y="299.0" width="37.2" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="438.0" y="312.0" font-size="10.5" fill="#57524A" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">/api</text>
+<path d="M750 300 L820 300" fill="none" stroke="#57524A" stroke-width="1.9" marker-end="url(#h57524A)" marker-start="url(#h57524A)"/>
+<rect x="747.5" y="276" width="75.0" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="785" y="289" font-size="10.5" fill="#57524A" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">POST /chat</text>
+<path d="M1204 214 L1262 213" fill="none" stroke="#C67A12" stroke-width="1.9" marker-end="url(#hC67A12)" marker-start="url(#hC67A12)"/>
+<rect x="1170.3" y="188" width="125.39999999999999" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="1233" y="201" font-size="10.5" fill="#C67A12" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">tool-loop + stream</text>
+<path d="M895 379 L620 606" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)"/>
+<rect x="612.1" y="508" width="175.79999999999998" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="700" y="521" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">rememberFromTurn() · async</text>
+<path d="M1030 379 L905 545" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)" marker-start="url(#h7C5CFF)"/>
+<rect x="1017.85" y="488" width="144.29999999999998" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="1090" y="501" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">recall(msg,5) → top-k</text>
+<path d="M1560 545 L1560 500" fill="none" stroke="#7C5CFF" stroke-width="1.9" marker-end="url(#h7C5CFF)" marker-start="url(#h7C5CFF)"/>
+<rect x="1484.7" y="518" width="150.6" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="1560" y="531" font-size="10.5" fill="#7C5CFF" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">embed · extract (Qwen)</text>
+<path d="M845 379 L845 452 L250 452 L250 720" fill="none" stroke="#2E9C6E" stroke-width="1.9" marker-end="url(#h2E9C6E)"/>
+<rect x="383.05" y="432" width="93.89999999999999" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="430" y="445" font-size="10.5" fill="#2E9C6E" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">executeTool()</text>
+<path d="M230 870 L600 1005" fill="none" stroke="#2E9C6E" stroke-width="1.9" marker-end="url(#h2E9C6E)"/>
+<rect x="396.4" y="919.5" width="37.2" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="415.0" y="932.5" font-size="10.5" fill="#2E9C6E" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">CRUD</text>
+<path d="M900 907 L900 970" fill="none" stroke="#2E9C6E" stroke-width="1.9" marker-end="url(#h2E9C6E)" marker-start="url(#h2E9C6E)"/>
+<rect x="936.2" y="933" width="87.6" height="17" rx="6" fill="#F5F1E8" opacity="0.95"/>
+<text x="980" y="946" font-size="10.5" fill="#2E9C6E" font-family="ui-monospace,Menlo,Consolas,monospace" text-anchor="middle" font-weight="600">read / write</text>
+<rect x="1300" y="980" width="410" height="150" rx="14" fill="#FFFFFF" stroke="#E1D9C8"/>
+<text x="1318" y="1008" font-size="13" fill="#211F1B" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="700">Legend</text>
+<rect x="1318" y="1022" width="26" height="16" rx="5" fill="#FFFFFF" stroke="#E1D9C8"/>
+<text x="1352" y="1035" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">service / handler</text>
+<ellipse cx="1331" cy="1058" rx="13" ry="7" fill="#FFFFFF" stroke="#2E9C6E"/>
+<text x="1352" y="1061" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">datastore (MongoDB)</text>
+<rect x="1318" y="1074" width="26" height="16" rx="5" fill="none" stroke="#7C5CFF" stroke-dasharray="3 4"/>
+<text x="1352" y="1087" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">subsystem boundary</text>
+<path d="M1520 1030 h30" stroke="#7C5CFF" stroke-width="2" marker-end="url(#h7C5CFF)"/>
+<text x="1558" y="1034" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">memory path</text>
+<path d="M1520 1058 h30" stroke="#C67A12" stroke-width="2" marker-end="url(#hC67A12)"/>
+<text x="1558" y="1062" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">Qwen model call</text>
+<path d="M1520 1086 h30" stroke="#2E9C6E" stroke-width="2" marker-end="url(#h2E9C6E)"/>
+<text x="1558" y="1090" font-size="11" fill="#6E6A61" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" text-anchor="start" font-weight="400">data read / write</text>
 </svg>

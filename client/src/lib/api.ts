@@ -87,6 +87,16 @@ export interface MemoryStats {
   kinds: Record<string, number>
 }
 
+export interface NotificationItem {
+  id: string
+  type: 'reminder' | 'low_stock' | 'debt_due'
+  title: string
+  body: string
+  severity: 'danger' | 'warning' | 'info'
+  at: string
+  href: string
+}
+
 
 export interface PnlItem {
   name: string
@@ -249,6 +259,7 @@ export const api = {
   memory: () => request<{ memories: MemoryItem[]; stats: MemoryStats }>('/memory'),
   memoryRecall: (q: string) => request<{ recalled: { id: string; text: string; score: number }[] }>(`/memory/recall?q=${encodeURIComponent(q)}`),
   forgetMemory: (id: string) => request<{ ok: true }>(`/memory/${id}/forget`, { method: 'POST' }),
+  notifications: () => request<{ notifications: NotificationItem[]; count: number }>('/notifications'),
 }
 
 /** Download an invoice PDF (blob fetch so we can send the auth header, then save). */

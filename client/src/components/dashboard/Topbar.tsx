@@ -1,6 +1,7 @@
 import { Icon } from '@iconify/react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
+import NotificationsBell from './NotificationsBell'
 
 function initialsOf(name = ''): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'K'
@@ -22,6 +23,8 @@ export default function Topbar({ title }: { title: string }) {
           </span>
           <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">{shopName}</span>
         </div>
+
+        <NotificationsBell />
 
         <button
           type="button"
