@@ -76,7 +76,7 @@ export default function MemoryPage() {
       <section className="flex flex-col gap-4 rounded-3xl bg-white border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#7C5CFF]/10 text-[#7C5CFF]">
-            <Icon icon="solar:brain-linear" width="24" />
+            <Icon icon="solar:cpu-bolt-linear" width="24" />
           </span>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -154,7 +154,7 @@ export default function MemoryPage() {
           <div className="h-40 animate-pulse rounded-3xl bg-zinc-200/60 dark:bg-zinc-800/60" />
         ) : memories.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-zinc-300 bg-white/50 py-16 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-            <Icon icon="solar:brain-linear" width="34" className="text-zinc-400" />
+            <Icon icon="solar:cpu-bolt-linear" width="34" className="text-zinc-400" />
             <p className="text-sm text-zinc-500">No memories yet. Tell Kredex things in Chat — habits, preferences, standing instructions — and they'll appear here.</p>
           </div>
         ) : (
