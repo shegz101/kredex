@@ -139,6 +139,10 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
 - **Dashboard & business health** — revenue chart, stat cards, low-stock and
   needs-attention panels, and a 0–100 business-health score (Strong / Good / Watch
   / At risk).
+- **Notifications** — a live alerts bell surfaces reminders that have fallen due,
+  stock at/below its reorder level, and credit payments whose due date has arrived.
+  Each alert is recomputed from the shop's real data — nothing autonomous.
+  (`server/src/routes/notifications.routes.ts`)
 - **Currency-aware everywhere** — NGN / USD / GHS / KES / ZAR propagates across the
   dashboard, chat, and invoices.
 - **Production hardening** — JWT auth (bcrypt, live email-taken check, password
@@ -341,8 +345,9 @@ server/src/
     jwt.ts             # sign/verify tokens          invoicePdf.ts# PDF generation
     db.ts              # Mongoose connection
   models/              # 10 Mongoose schemas incl. Memory.ts
-  routes/              # auth · chat · memory · dashboard · receipt · pnl ·
-                       # invoices · settings · reminders · voice · opportunities
+  routes/              # auth · chat · memory · notifications · dashboard ·
+                       # receipt · pnl · invoices · settings · reminders ·
+                       # voice · opportunities
   middleware/auth.ts   # requireAuth (JWT)
 
 client/src/
@@ -351,7 +356,7 @@ client/src/
   components/
     dashboard/         # DashboardPage · ChatPage · MemoryPage · PnlPage ·
                        # InvoicesPage · OpportunitiesPage · RemindersPage ·
-                       # SettingsPage · Sidebar · …
+                       # SettingsPage · Sidebar · Topbar · NotificationsBell · …
     Toast.tsx · …
   lib/api.ts           # typed API client (REST + SSE)
   hooks/ · utils/

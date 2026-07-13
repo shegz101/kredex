@@ -4,6 +4,7 @@ import { ToastProvider } from './components/Toast'
 import { AuthProvider } from './auth/AuthContext'
 import RequireAuth from './components/RequireAuth'
 import Landing from './Landing'
+import LandingV2 from './LandingV2'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -26,7 +27,8 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<LandingV2 />} />
+          <Route path="/classic" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
