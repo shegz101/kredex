@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api, parseReceipt, streamChat, transcribeAudio, speakText } from '../../lib/api'
-import type { ChatEvent, ParsedReceipt } from '../../lib/api'
+import type { ChatEvent, ParsedReceipt, ChatSessionMeta } from '../../lib/api'
 import { useAuth } from '../../auth/AuthContext'
 import { useMoney } from '../../lib/useMoney'
 import { renderMarkdown } from '../../lib/markdown'
@@ -153,6 +153,10 @@ const nextId = () => `m${++counter}`
 export default function ChatPage() {
   const { shop } = useAuth()
   const [messages, setMessages] = useState<Msg[]>([])
+  const [sessions, setSessions] = useState<ChatSessionMeta[]>([])
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+  const sessionRef = useRef<string | null>(null) // mirror of activeSessionId for async callbacks
+  const [railOpen, setRailOpen] = useState(false) // mobile thread drawer
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [committingId, setCommittingId] = useState<string | null>(null)
@@ -167,30 +171,71 @@ export default function ChatPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const cameFromVoice = useRef(false)
 
-  // load saved conversation on mount so chats survive navigation/reload
+  const toMsgs = (rows: { id: string; role: 'user' | 'assistant'; text: string; intent?: string; actions?: unknown[]; receipt?: unknown }[]): Msg[] =>
+    rows.map((m) => ({
+      id: m.id,
+      role: m.role === 'user' ? 'user' : 'kredex',
+      text: m.text,
+      intent: m.intent,
+      actions: (m.actions ?? []) as Action[],
+      pending: false,
+      receipt: (m.receipt as Receipt) ?? undefined,
+    }))
+
+  const setActive = (id: string | null) => {
+    sessionRef.current = id
+    setActiveSessionId(id)
+  }
+
+  const loadSessions = () => api.chatSessions().then((r) => setSessions(r.sessions)).catch(() => {})
+
+  // on mount: load the thread list + open the most recent conversation
   useEffect(() => {
     let active = true
+    void loadSessions()
     api
       .chatHistory()
       .then((r) => {
         if (!active) return
-        setMessages(
-          r.messages.map((m) => ({
-            id: m.id,
-            role: m.role === 'user' ? 'user' : 'kredex',
-            text: m.text,
-            intent: m.intent,
-            actions: (m.actions ?? []) as Action[],
-            pending: false,
-            receipt: (m.receipt as Receipt) ?? undefined,
-          })),
-        )
+        setActive(r.sessionId)
+        setMessages(toMsgs(r.messages))
       })
       .catch(() => {})
     return () => {
       active = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // switch to an existing thread
+  const openSession = (id: string) => {
+    if (id === activeSessionId || busy) return
+    setActive(id)
+    setRailOpen(false)
+    api.chatHistory(id).then((r) => setMessages(toMsgs(r.messages))).catch(() => {})
+  }
+
+  // start a fresh thread (memory still carries across — only the transcript is new)
+  const newChat = () => {
+    if (busy) return
+    setActive(null)
+    setMessages([])
+    setRailOpen(false)
+  }
+
+  const removeSession = async (id: string) => {
+    try {
+      await api.deleteSession(id)
+      const rest = sessions.filter((s) => s.id !== id)
+      setSessions(rest)
+      if (id === activeSessionId) {
+        if (rest.length) openSession(rest[0].id)
+        else newChat()
+      }
+    } catch {
+      toast.error('Could not delete that chat')
+    }
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -212,10 +257,12 @@ export default function ChatPage() {
       { id: botId, role: 'kredex', text: '', actions: [], pending: true },
     ])
     setBusy(true)
+    const wasNewThread = sessionRef.current === null
     let finalReply = ''
     try {
       await streamChat(msg, (e: ChatEvent) => {
-        if (e.type === 'intent') patch(botId, (m) => ({ ...m, intent: e.intent }))
+        if (e.type === 'session') setActive(e.sessionId) // server told us which thread this is
+        else if (e.type === 'intent') patch(botId, (m) => ({ ...m, intent: e.intent }))
         else if (e.type === 'action') patch(botId, (m) => ({ ...m, actions: [...m.actions, { name: e.name, result: e.result }] }))
         else if (e.type === 'token') {
           finalReply += e.value
@@ -227,13 +274,16 @@ export default function ChatPage() {
           finalReply = ''
           patch(botId, (m) => ({ ...m, text: e.error, pending: false }))
         }
-      })
+      }, sessionRef.current ?? undefined)
     } catch {
       patch(botId, (m) => ({ ...m, text: 'Sorry — something went wrong. Please try again.', pending: false }))
     } finally {
       patch(botId, (m) => ({ ...m, pending: false }))
       setBusy(false)
     }
+    // refresh the thread list so a brand-new chat appears (and its auto-title shows)
+    if (wasNewThread) void loadSessions()
+    else setSessions((prev) => prev.map((s) => (s.id === sessionRef.current ? { ...s, lastMessageAt: new Date().toISOString() } : s)))
     if (speakIt && finalReply) void playReply(botId, finalReply)
   }
 
@@ -247,12 +297,15 @@ export default function ChatPage() {
       { id: botId, role: 'kredex', text: '', actions: [], pending: true },
     ])
     setBusy(true)
+    const wasNewThread = sessionRef.current === null
     try {
       const data = await parseReceipt(file)
-      void api.saveMessage('user', 'Sent a receipt photo')
+      // await the first save so a new thread is created ONCE; reuse its id after
+      const uSave = await api.saveMessage('user', 'Sent a receipt photo', undefined, sessionRef.current ?? undefined)
+      if (uSave.sessionId) setActive(uSave.sessionId)
       if (data.items.length === 0) {
         patch(botId, (m) => ({ ...m, pending: false, text: "I couldn't read items off that one — try a clearer, flatter photo." }))
-        void api.saveMessage('assistant', "I couldn't read items off that receipt.")
+        void api.saveMessage('assistant', "I couldn't read items off that receipt.", undefined, sessionRef.current ?? undefined)
       } else {
         // persist the receipt draft WITH the message so the "Log to stock" card
         // survives reloads; adopt the returned DB id so commit can mark it done.
@@ -261,6 +314,7 @@ export default function ChatPage() {
           'assistant',
           "I read your receipt 👇 Check it's right, then log it to your stock.",
           receipt,
+          sessionRef.current ?? undefined,
         )
         patch(botId, (m) => ({
           ...m,
@@ -274,6 +328,7 @@ export default function ChatPage() {
       patch(botId, (m) => ({ ...m, pending: false, text: e instanceof Error ? e.message : 'Failed to read the receipt.' }))
     } finally {
       setBusy(false)
+      if (wasNewThread) void loadSessions()
     }
   }
 
@@ -369,9 +424,90 @@ export default function ChatPage() {
     void send(input)
   }
 
+  const renderRail = () => (
+    <div className="flex h-full flex-col">
+      <button
+        type="button"
+        onClick={newChat}
+        className="flex items-center justify-center gap-2 rounded-xl bg-[#EB4A26] px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+      >
+        <Icon icon="solar:pen-new-square-linear" width="17" /> New chat
+      </button>
+      <div className="no-scrollbar mt-3 flex-1 space-y-1 overflow-y-auto">
+        {sessions.length === 0 ? (
+          <p className="px-2 py-4 text-center text-xs text-zinc-400">Your chats will appear here.</p>
+        ) : (
+          sessions.map((s) => {
+            const active = s.id === activeSessionId
+            return (
+              <div key={s.id} className="group relative">
+                <button
+                  type="button"
+                  onClick={() => openSession(s.id)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 pr-8 text-left text-sm transition-colors ${
+                    active
+                      ? 'bg-[#EB4A26]/10 font-medium text-[#EB4A26]'
+                      : 'text-zinc-600 hover:bg-[#F3F4EF] dark:text-zinc-300 dark:hover:bg-zinc-800/60'
+                  }`}
+                >
+                  <Icon icon="solar:chat-round-line-linear" width="15" className="shrink-0 opacity-70" />
+                  <span className="truncate">{s.title || 'New chat'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void removeSession(s.id)}
+                  aria-label="Delete chat"
+                  className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded-md p-1 text-zinc-400 hover:text-[#EB4A26] group-hover:block"
+                >
+                  <Icon icon="solar:trash-bin-minimalistic-linear" width="14" />
+                </button>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <DashboardLayout title="Chat">
+      <div className="flex min-h-0 flex-1 gap-4">
+        {/* desktop thread rail */}
+        <aside className="hidden w-60 shrink-0 rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm md:block dark:border-zinc-800 dark:bg-zinc-900">
+          {renderRail()}
+        </aside>
+
+        {/* mobile thread drawer */}
+        {railOpen && (
+          <div className="fixed inset-0 z-40 md:hidden" onClick={() => setRailOpen(false)}>
+            <div className="absolute inset-0 bg-black/30" />
+            <div
+              className="absolute left-0 top-0 h-full w-64 border-r border-zinc-200 bg-white p-3 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {renderRail()}
+            </div>
+          </div>
+        )}
+
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        {/* mobile: open threads / new chat */}
+        <div className="flex items-center gap-2 border-b border-zinc-200 p-3 md:hidden dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => setRailOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
+          >
+            <Icon icon="solar:hamburger-menu-linear" width="15" /> Chats
+          </button>
+          <button
+            type="button"
+            onClick={newChat}
+            className="ml-auto flex items-center gap-1.5 rounded-lg bg-[#EB4A26] px-2.5 py-1.5 text-xs font-semibold text-white"
+          >
+            <Icon icon="solar:pen-new-square-linear" width="15" /> New
+          </button>
+        </div>
         <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto p-5 sm:p-6">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
@@ -498,6 +634,7 @@ export default function ChatPage() {
             </button>
           </div>
         </form>
+      </div>
       </div>
     </DashboardLayout>
   )

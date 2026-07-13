@@ -17,6 +17,9 @@ const actionSchema = new Schema(
 const chatMessageSchema = new Schema(
   {
     shopId: { type: Schema.Types.ObjectId, ref: "Shop", required: true, index: true },
+    // which chat thread this line belongs to. Sessions are just UI threads —
+    // the shop's long-term memory (facts + semantic) is shared across ALL of them.
+    sessionId: { type: Schema.Types.ObjectId, ref: "ChatSession", index: true },
     role: { type: String, enum: ["user", "assistant"], required: true },
     text: { type: String, default: "" },
     intent: { type: String },
@@ -27,6 +30,7 @@ const chatMessageSchema = new Schema(
 );
 
 chatMessageSchema.index({ shopId: 1, createdAt: 1 });
+chatMessageSchema.index({ sessionId: 1, createdAt: 1 }); // load one thread's messages in order
 
 export type ChatMessage = InferSchemaType<typeof chatMessageSchema>;
 export const ChatMessageModel = model("ChatMessage", chatMessageSchema);

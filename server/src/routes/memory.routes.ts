@@ -1,14 +1,20 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { listMemories, memoryStats, forgetOne, recallDetailed } from "../services/memory.js";
+import { listFacts } from "../services/facts.js";
 
 const router = Router();
 
-/** GET /api/memory — everything the agent remembers about this shop (+ stats). */
+/** GET /api/memory — everything the agent remembers about this shop (+ stats).
+ *  Two tiers: structured `facts` (the canonical-key trie) and narrative `memories`. */
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const [memories, stats] = await Promise.all([listMemories(req.shopId!), memoryStats(req.shopId!)]);
-    res.json({ memories, stats });
+    const [memories, stats, facts] = await Promise.all([
+      listMemories(req.shopId!),
+      memoryStats(req.shopId!),
+      listFacts(req.shopId!),
+    ]);
+    res.json({ memories, stats, facts });
   } catch (err) {
     console.error("memory list error:", err);
     res.status(500).json({ error: "Failed to load memory" });

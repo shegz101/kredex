@@ -1,29 +1,37 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { connectDB } from "../lib/db.js";
-import { ShopModel, UserModel, MemoryModel } from "../models/index.js";
+import { ShopModel, UserModel, MemoryModel, FactModel } from "../models/index.js";
 import { rememberFromTurn, recallDetailed, listMemories, memoryStats } from "../services/memory.js";
+import { rememberFactsFromTurn, recallFacts, listFacts } from "../services/facts.js";
 
 /**
- * Seeds a shop's long-term memory by running a realistic demo conversation
- * through the REAL pipeline (Qwen extraction + embeddings + dedup) — nothing is
- * hand-inserted. Then it runs a few live recalls to show the scoring at work.
+ * Seeds a shop's TWO-TIER long-term memory by running a realistic demo
+ * conversation through the REAL pipeline — nothing is hand-inserted:
+ *   • Tier 1 (structured facts): canonicalizer → canonical-key trie  (facts.ts)
+ *   • Tier 2 (narrative memory): extraction → embeddings → dedup      (memory.ts)
+ * Then it runs live recalls against both tiers to show them working.
  *
  * Run with:  npm --prefix server exec tsx src/scripts/seed-memory.ts
  * Optional:  SHOP="Olusegun enterprises" to target a specific shop by name.
  */
 
 // A shop owner talking to Kredex over several sessions. Durable knowledge is
-// mixed with transient chatter on purpose — the extractor should keep the
-// former and ignore the latter.
+// mixed with transient chatter on purpose — the pipeline should keep the former
+// and ignore the latter. Note the mix of STRUCTURED facts (prices, terms, phone
+// numbers → Tier 1 trie) and NARRATIVE knowledge (habits, rules → Tier 2).
 const CONVO: { user: string; assistant: string }[] = [
   {
     user: "Hi. I run a foodstuff and provisions shop here in Lagos. I usually close at 8pm, but on Fridays I close by 4pm for prayers.",
     assistant: "Got it — noted your hours: 8pm on weekdays, and you close early by 4pm on Fridays.",
   },
   {
-    user: "Tunde is one of my regulars. He always buys on credit and clears it at the end of every month. He's never defaulted.",
-    assistant: "Understood. Tunde buys on credit and settles monthly, reliably.",
+    user: "A bag of rice sells for 32,000, and I buy it from my supplier at 28,000. A crate of coke sells for 4,500, I get it at 3,800.",
+    assistant: "Saved your prices — rice: sell ₦32,000 / cost ₦28,000; coke: sell ₦4,500 / cost ₦3,800.",
+  },
+  {
+    user: "Tunde is one of my regulars. He always buys on credit and clears it at the end of every month. He's never defaulted. His number is 0803 555 1212.",
+    assistant: "Understood — Tunde buys on credit and settles monthly, reliably. Saved his number too.",
   },
   {
     user: "Amaka buys rice in bulk every two weeks for her restaurant. Give her a 5% discount whenever she buys.",
@@ -42,12 +50,18 @@ const CONVO: { user: string; assistant: string }[] = [
     assistant: "Understood — minimum 15% margin, never below cost.",
   },
   {
-    user: "I sold 3 bags of rice today for 45,000 naira total. Just letting you know.",
+    user: "I sold 3 bags of rice today for 96,000 naira total. Just letting you know.",
     assistant: "Recorded that sale in today's ledger.",
   },
   {
     user: "Also, talk to me in simple English, and send me a summary of who owes me every Monday morning.",
     assistant: "Noted your preferences: simple English, and a weekly debtors summary every Monday morning.",
+  },
+  {
+    // A LATER session correcting an earlier fact — demonstrates in-place overwrite
+    // (the old ₦32,000 is pushed to history; the trie now returns ₦34,000).
+    user: "Rice price just went up. I now sell a bag of rice for 34,000.",
+    assistant: "Updated — a bag of rice now sells for ₦34,000 (was ₦32,000).",
   },
 ];
 
@@ -56,6 +70,13 @@ const RECALL_QUERIES = [
   "what time do I close on Fridays?",
   "who supplies my rice and what are the terms?",
   "what should I restock and when?",
+];
+
+// queries aimed at the structured (Tier 1) fact store
+const FACT_QUERIES = [
+  "how much do I sell and buy rice for?",
+  "what is the price of coke?",
+  "what is Tunde's phone number?",
 ];
 
 async function main() {
@@ -87,26 +108,52 @@ async function main() {
   const shopId = String(shop._id);
   console.log(`\n🏪  Seeding memory for: ${shop.name}  (${shopId})`);
 
-  // fresh start so the demo is reproducible
-  const cleared = await MemoryModel.deleteMany({ shopId });
-  console.log(`🧹  Cleared ${cleared.deletedCount} existing memories.\n`);
+  // fresh start so the demo is reproducible — clear BOTH tiers
+  const [clearedMem, clearedFacts] = await Promise.all([
+    MemoryModel.deleteMany({ shopId }),
+    FactModel.deleteMany({ shopId }),
+  ]);
+  console.log(`🧹  Cleared ${clearedMem.deletedCount} memories and ${clearedFacts.deletedCount} facts.\n`);
 
-  console.log("💬  Running the demo conversation through the extractor…");
+  console.log("💬  Running the demo conversation through BOTH tiers (facts + memory)…");
   for (const [i, turn] of CONVO.entries()) {
-    await rememberFromTurn(shopId, turn.user, turn.assistant);
+    // exactly what production does on every turn (see chat.routes.ts)
+    await rememberFactsFromTurn(shopId, turn.user, turn.assistant); // Tier 1 · structured facts (trie)
+    await rememberFromTurn(shopId, turn.user, turn.assistant); //      Tier 2 · narrative memory (vectors)
     process.stdout.write(`   turn ${i + 1}/${CONVO.length} ✓\n`);
   }
 
+  // ---- Tier 1 · structured facts (the canonical-key trie) ----
+  const facts = await listFacts(shopId);
+  console.log(`\n🗂️   TIER 1 — ${facts.length} structured facts (category · subject · attribute → value):`);
+  for (const f of facts) {
+    const val = typeof f.value === "number" ? f.value.toLocaleString() : String(f.value);
+    const changed = f.changes > 0 ? `  (overwritten ${f.changes}×)` : "";
+    console.log(`   ${f.key.padEnd(30)} = ${val}${f.unit ? " " + f.unit : ""}${changed}`);
+  }
+
+  console.log("\n🔎  Tier 1 recall — deterministic key/prefix lookup via the trie:");
+  for (const q of FACT_QUERIES) {
+    const hits = await recallFacts(shopId, q);
+    console.log(`\n   Q: "${q}"`);
+    if (!hits.length) console.log("      (no matching subject in the query)");
+    for (const h of hits) {
+      const val = typeof h.value === "number" ? h.value.toLocaleString() : String(h.value);
+      console.log(`      ${h.key}  →  ${val}${h.unit ? " " + h.unit : ""}`);
+    }
+  }
+
+  // ---- Tier 2 · narrative memory (vectors) ----
   const stats = await memoryStats(shopId);
-  console.log(`\n🧠  Stored ${stats.total} memories:`, stats.kinds);
+  console.log(`\n🧠  TIER 2 — stored ${stats.total} narrative memories:`, stats.kinds);
 
   const mems = await listMemories(shopId);
-  console.log("\n📋  Stored memories (by importance):");
+  console.log("\n📋  Narrative memories (by importance):");
   for (const m of mems) {
     console.log(`   [${m.kind.padEnd(10)}] imp ${String(m.importance).padStart(4)}  · ${m.text}`);
   }
 
-  console.log("\n🔎  Live recall (score = cosine × importance × recency, MMR-selected):");
+  console.log("\n🔎  Tier 2 recall (score = cosine × importance × recency, MMR-selected):");
   for (const q of RECALL_QUERIES) {
     const hits = await recallDetailed(shopId, q, 4);
     console.log(`\n   Q: "${q}"`);
@@ -114,7 +161,7 @@ async function main() {
     for (const h of hits) console.log(`      ${h.score.toFixed(3)}  · ${h.text}`);
   }
 
-  console.log("\n✅  Done. Open the Memory page to see it populated.\n");
+  console.log("\n✅  Done. Open the Memory page to see both tiers populated.\n");
   await mongoose.disconnect();
 }
 

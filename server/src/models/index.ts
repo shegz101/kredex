@@ -9,6 +9,8 @@ export { InventoryItemModel, type InventoryItem } from "./InventoryItem.js";
 export { DebtModel, type Debt } from "./Debt.js";
 export { TransactionModel, type Transaction } from "./Transaction.js";
 export { ChatMessageModel, type ChatMessage } from "./ChatMessage.js";
+export { ChatSessionModel, type ChatSession } from "./ChatSession.js";
 export { InvoiceModel, type Invoice } from "./Invoice.js";
 export { ReminderModel, type Reminder } from "./Reminder.js";
 export { MemoryModel, type Memory } from "./Memory.js";
+export { FactModel, type Fact } from "./Fact.js";

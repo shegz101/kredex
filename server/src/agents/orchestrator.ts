@@ -4,6 +4,7 @@ import { ShopModel } from "../models/index.js";
 import { classify, type Intent } from "../lib/classifier.js";
 import { toolDefs, executeTool } from "./tools.js";
 import { recall } from "../services/memory.js";
+import { recallFacts } from "../services/facts.js";
 
 /**
  * The agent loop (multi-agent routing in one place):
@@ -59,11 +60,32 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
   const shopName = shop?.name ?? "your shop";
   const currency = shop?.currency ?? "NGN";
 
-  // MemoryAgent: semantically recall relevant facts from past sessions
-  const recalled = await recall(shopId, message, 5);
-  const memoryNote: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = recalled.length
-    ? [{ role: "system", content: "Things you remember about this shop that may be relevant:\n" + recalled.map((t) => `- ${t}`).join("\n") }]
-    : [];
+  // MemoryAgent — hybrid recall across ALL past sessions:
+  //   Tier 1 (facts): deterministic key/prefix lookup of structured facts (prices,
+  //           terms, phone numbers). These are the CURRENT truth → the agent must
+  //           trust them over anything vaguer, and they update the moment the owner
+  //           changes them in any session.
+  //   Tier 2 (memory): fuzzy, semantic recall of narrative habits/preferences.
+  const [facts, recalled] = await Promise.all([
+    recallFacts(shopId, message),
+    recall(shopId, message, 5),
+  ]);
+
+  const memoryNote: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+  if (facts.length) {
+    memoryNote.push({
+      role: "system",
+      content:
+        "Current facts about this shop (authoritative — use these exact values; they are up to date across all chats):\n" +
+        facts.map((f) => `- ${f.label || f.key}: ${f.value}${f.unit ? " " + f.unit : ""}`).join("\n"),
+    });
+  }
+  if (recalled.length) {
+    memoryNote.push({
+      role: "system",
+      content: "Things you remember about this shop that may be relevant:\n" + recalled.map((t) => `- ${t}`).join("\n"),
+    });
+  }
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt(shopName, currency) },

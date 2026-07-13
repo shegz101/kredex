@@ -89,18 +89,31 @@ Either way, register a shop and tell Kredex:
 Kredex is built for the **MemoryAgent** track: a genuine, optimized long-term
 memory architecture — not a chat window with history.
 
-- **Structured memory, not raw logs.** Every conversation is distilled by a model
-  pass into durable, typed memories — *facts*, *preferences*, *events* (e.g.
-  "Tunde pays late but always pays", "owner closes early on Fridays"). Transient
-  transactions are ignored, so memory stays clean and useful.
-- **Optimized retrieval within a limited context window.** Recall scores each
+- **Two-tier memory — the right data structure for each job.** Structured facts
+  (prices, supplier terms, phone numbers, reorder levels) live in a **canonical-key
+  trie**: `product.rice.sell_price → 34,000`. That gives **O(key-length)** exact
+  lookup, **prefix queries** ("everything about rice" = one subtree walk), and
+  **instant in-place overwrite** — say "rice is now ₦34,000" and the old value is
+  superseded (kept in history), deterministically, no fuzzy match. Messy, narrative
+  knowledge that *can't* be keyed ("Tunde grumbles but always pays") lives in a
+  **vector store**. The agent trusts the trie for exact values and the vectors for
+  associative recall. (`server/src/lib/trie.ts`, `server/src/services/facts.ts`)
+- **One brain, many conversations.** Both tiers are **shop-scoped and shared across
+  every chat session** — tell Kredex something in one chat and it's known in all the
+  others. Sessions only scope the short-term replay; long-term memory is global.
+- **Structured extraction, not raw logs.** Every turn is distilled by a model pass:
+  a **canonicalizer** emits keyed facts for the trie, while a separate extractor
+  produces durable, typed memories — *facts*, *preferences*, *events* — for the
+  vector tier. Transient transactions are ignored, so memory stays clean.
+- **Optimized retrieval within a limited context window.** Vector recall scores each
   memory by **cosine × importance × recency**, then uses **MMR** to select a
-  diverse, non-redundant set under a **token budget** — surfacing the *critical
-  few*, not just the top cosine match.
-- **It learns, and it forgets.** Memories that get recalled are **reinforced**
-  (importance ↑, recency refreshed) so the agent grows more accurate across
-  sessions; near-duplicates **merge**, and the least important, oldest memories are
-  **evicted** past a cap. A built-in **Memory inspector** lets you watch it all.
+  diverse, non-redundant set under a **token budget** — the *critical few*, not just
+  the top cosine match.
+- **It learns, and it forgets.** Recalled memories are **reinforced** (importance ↑,
+  recency refreshed); near-duplicates **merge**, and the least important, oldest
+  memories are **evicted** past a cap. A built-in **Memory / knowledge tab** lets you
+  watch both tiers — the fact trie as a grouped tree, the vector memories with a
+  live recall tester.
 
 It speaks the owner's language (English + Nigerian Pidgin, typed **or spoken**),
 reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Studio.
@@ -113,18 +126,24 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
   Tools: `record_sale`, `record_credit_sale`, `record_payment`, `record_expense`,
   `log_stock`, `create_invoice`, `save_customer_phone`, `set_reminder`,
   `query_debts`, `query_stock`, `daily_summary`.
-- **Long-term memory engine (the MemoryAgent core)** — each turn is distilled into
-  typed memories (fact / preference / event) embedded with `text-embedding-v4`
-  (1024-dim). Recall is scored by **cosine × importance × recency**, selected with
-  **MMR** under a token budget, and **reinforced** on use; near-duplicates merge and
-  stale memories are evicted. So the agent recalls the *right* context across
-  sessions without bloating its prompt. (`server/src/services/memory.ts`)
-- **Memory inspector** — a dedicated page shows everything the agent remembers
-  (type, importance, times recalled, last used) plus a **live recall tester**: type
-  a query and watch which memories it retrieves and how strongly they score.
-- **Memory-aware answers** — recalled facts are injected into the agent's context,
-  so Kredex answers and advises with real knowledge of your shop, customers, and
-  habits — and gets more accurate the more you use it.
+- **Two-tier long-term memory (the MemoryAgent core)** — every turn feeds both:
+  **Tier 1**, a **canonical-key trie** of structured facts (`facts.ts`, backed by a
+  unique-keyed `Fact` collection) for deterministic lookup, prefix queries, and
+  in-place overwrite; and **Tier 2**, a **vector store** of typed memories embedded
+  with `text-embedding-v4` (1024-dim), recalled by **cosine × importance × recency**
+  + **MMR** under a token budget, **reinforced** on use, deduped and evicted when
+  stale (`server/src/services/memory.ts`). Both are **shop-scoped**, so they persist
+  and update across every chat session.
+- **Multiple chat sessions** — owners keep separate conversation threads (like
+  ChatGPT chats); memory is shared across all of them. Short-term replay is
+  per-thread; long-term recall is global. (`ChatSession` model + `/api/chat/sessions`)
+- **Memory / knowledge tab** — a dedicated page shows both tiers: the structured
+  facts as a grouped tree (Products › rice › sell price ₦34,000, with an "overwritten
+  N×" badge), and the narrative memories with a **live recall tester** that scores
+  what a query retrieves.
+- **Memory-aware answers** — the trie's exact facts (authoritative) and the vector
+  tier's associative recall are both injected into the agent's context, so Kredex
+  answers with real, up-to-date knowledge of your shop — and gets sharper with use.
 - **Receipt photo OCR** — snap a supplier receipt; `qwen-vl-max` extracts
   structured line items to confirm and log.
 - **Voice, both ways** — speak your entries (`qwen3-asr-flash`, speech-to-text) and
@@ -153,9 +172,11 @@ reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Stu
 
 Kredex is a **conversational, memory-driven** agent. The owner *talks* (types,
 speaks, or snaps a receipt); the engine logs it to MongoDB, **distils durable
-memories** from the conversation, and **recalls** the critical few on every new
-turn. Every AI call goes to **Qwen** (Alibaba Model Studio / DashScope) through one
-OpenAI-compatible client, and the whole stack is deployed on **Alibaba Cloud**.
+memories** from the conversation into two tiers — a **canonical-key trie** of exact
+facts and a **vector store** of narrative memory — and performs **hybrid recall**
+(exact facts + semantic memories) on every new turn. Every AI call goes to **Qwen**
+(Alibaba Model Studio / DashScope) through one OpenAI-compatible client, and the
+whole stack is deployed on **Alibaba Cloud**.
 
 ![Kredex system architecture overview](docs/assets/architecture-overview.png)
 
@@ -167,7 +188,7 @@ OpenAI-compatible client, and the whole stack is deployed on **Alibaba Cloud**.
 | Model | Role in Kredex |
 |---|---|
 | `qwen3.7-max` | Deep P&L / profit reasoning |
-| `qwen3.5-flash` | Chat tool-calling, opportunity scout |
+| `qwen3.5-flash` | Chat tool-calling, opportunity scout, memory extraction + fact canonicalization |
 | `qwen-vl-max` | Receipt photo OCR |
 | `qwen3-asr-flash` | Speech-to-text (voice logging) |
 | `qwen3-tts-flash` | Text-to-speech (talk-back) |
@@ -176,22 +197,27 @@ OpenAI-compatible client, and the whole stack is deployed on **Alibaba Cloud**.
 
 ## The agent layer
 
-The heart of Kredex is a **memory loop** wrapped around a tool-calling agent:
+The heart of Kredex is a **two-tier memory loop** wrapped around a tool-calling agent:
 
 ```text
-Owner message
+Owner message  (in some chat session)
   -> local classifier (cheap intent guess, no LLM)
-  -> recall(query): score each memory by cosine × importance × recency,
-       MMR-select a diverse set under a token budget, reinforce what's used  ──► inject
+  -> HYBRID RECALL (shop-wide, across all sessions):
+       Tier 1 · recallFacts(): match query subjects → trie prefix walk → exact facts
+       Tier 2 · recall():      cosine × importance × recency → MMR under a token budget
+       → inject facts (authoritative) + memories (associative) into context
   -> Qwen tool-calling loop -> run tools against MongoDB -> stream the reply
-  -> rememberFromTurn: distil the turn into typed memories
-       (extract facts/preferences/events · dedup & merge · forget the stale)
+  -> WRITE both tiers · async:
+       rememberFactsFromTurn(): canonicalize → key:value → upsert (overwrite + history)
+       rememberFromTurn():      extract typed memories → embed → dedup/merge → forget
 ```
 
-- `server/src/agents/orchestrator.ts` — the Qwen tool-calling loop; injects recalled memories into the system prompt.
-- `server/src/services/memory.ts` — the memory engine: `rememberFromTurn()` (extraction), `recall()` (scored + MMR + reinforcement), `forget()` (eviction), `listMemories()`.
+- `server/src/agents/orchestrator.ts` — the Qwen tool-calling loop; runs hybrid recall and injects facts + memories into the system prompt.
+- `server/src/lib/trie.ts` — the **canonical-key trie** (insert/search/startsWith/delete) powering exact fact lookup, prefix queries, and overwrite.
+- `server/src/services/facts.ts` — Tier 1: `rememberFactsFromTurn()` (canonicalizer), `upsertFact()` (overwrite + history), `recallFacts()` (subject match → prefix walk), per-shop trie cache.
+- `server/src/services/memory.ts` — Tier 2: `rememberFromTurn()` (extraction), `recall()` (scored + MMR + reinforcement), `forget()` (eviction), `listMemories()`.
 - `server/src/lib/embeddings.ts` — `embed()` + `cosine()`.
-- `server/src/routes/memory.routes.ts` — the Memory inspector API (list, recall preview, forget).
+- `server/src/routes/memory.routes.ts` — the Memory / knowledge tab API (facts + memories, recall preview, forget).
 
 ## Requirements
 
@@ -306,8 +332,11 @@ Try these in the chat once you're logged in:
 > are you making money this month?
 ```
 
-Then open **Memory** to see what Kredex has learned about your shop — and use the
-**recall tester** to type a question and watch which memories it retrieves, scored.
+Then open **Memory** to see what Kredex has learned — the **structured facts** as a
+grouped tree (say "rice sells for 32,000", then "rice is now 34,000" and watch it
+overwrite with an "overwritten 1×" badge) and the **narrative memories** with a live
+**recall tester**. Open a **new chat** and ask "how much do I sell rice for?" — it
+answers from memory, even though you never said it in that thread.
 
 ## Deployment
 
@@ -335,8 +364,10 @@ server/src/
     orchestrator.ts    # Qwen tool-calling agent loop + memory recall injection
     tools.ts           # function-calling tools (record_sale, log_stock, create_invoice…)
   services/
-    memory.ts          # the memory engine: rememberFromTurn · recall (scored+MMR) · forget · list
+    facts.ts           # Tier 1: canonicalizer · upsert (overwrite+history) · recallFacts · trie cache
+    memory.ts          # Tier 2: rememberFromTurn · recall (scored+MMR) · forget · list
   lib/
+    trie.ts            # canonical-key trie (insert/search/startsWith/delete) — exact facts
     qwen.ts            # one OpenAI-compatible DashScope client + central model map
     embeddings.ts      # embed() + cosine() for semantic memory
     classifier.ts      # cheap local intent classifier (pre-LLM routing)
@@ -344,19 +375,20 @@ server/src/
     money.ts           # currency formatting        stock.ts     # low-stock helpers
     jwt.ts             # sign/verify tokens          invoicePdf.ts# PDF generation
     db.ts              # Mongoose connection
-  models/              # 10 Mongoose schemas incl. Memory.ts
-  routes/              # auth · chat · memory · notifications · dashboard ·
-                       # receipt · pnl · invoices · settings · reminders ·
-                       # voice · opportunities
+  models/              # 12 Mongoose schemas incl. Memory.ts · Fact.ts · ChatSession.ts
+  routes/              # auth · chat (+ sessions) · memory · notifications ·
+                       # dashboard · receipt · pnl · invoices · settings ·
+                       # reminders · voice · opportunities
+  scripts/seed-memory.ts # seeds both tiers via the real pipeline (demo/verification)
   middleware/auth.ts   # requireAuth (JWT)
 
 client/src/
-  Landing.tsx · App.tsx · main.tsx
+  Landing.tsx · LandingV2.tsx · App.tsx · main.tsx
   pages/               # Login · Register · ForgotPassword
   components/
-    dashboard/         # DashboardPage · ChatPage · MemoryPage · PnlPage ·
-                       # InvoicesPage · OpportunitiesPage · RemindersPage ·
-                       # SettingsPage · Sidebar · Topbar · NotificationsBell · …
+    dashboard/         # DashboardPage · ChatPage (session rail) · MemoryPage (fact tree +
+                       # recall tester) · PnlPage · InvoicesPage · OpportunitiesPage ·
+                       # RemindersPage · SettingsPage · Sidebar · Topbar · NotificationsBell · …
     Toast.tsx · …
   lib/api.ts           # typed API client (REST + SSE)
   hooks/ · utils/

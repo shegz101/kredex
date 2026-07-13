@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import DashboardLayout from './DashboardLayout'
 import { api } from '../../lib/api'
-import type { MemoryItem, MemoryStats } from '../../lib/api'
+import type { MemoryItem, MemoryStats, FactItem } from '../../lib/api'
 import { useToast } from '../Toast'
 
 const KIND: Record<string, { label: string; color: string; icon: string }> = {
@@ -10,6 +10,36 @@ const KIND: Record<string, { label: string; color: string; icon: string }> = {
   preference: { label: 'Preference', color: '#7C5CFF', icon: 'solar:heart-linear' },
   event: { label: 'Event', color: '#C67A12', icon: 'solar:calendar-linear' },
   chat: { label: 'Note', color: '#6E6A61', icon: 'solar:chat-round-line-linear' },
+}
+
+// how each top-level trie category is labelled/iconed in the knowledge tree
+const CATEGORY: Record<string, { label: string; icon: string }> = {
+  product: { label: 'Products', icon: 'solar:box-linear' },
+  customer: { label: 'Customers', icon: 'solar:users-group-rounded-linear' },
+  supplier: { label: 'Suppliers', icon: 'solar:delivery-linear' },
+  shop: { label: 'Shop', icon: 'solar:shop-linear' },
+}
+
+function prettyAttr(attr?: string): string {
+  return (attr ?? '').replace(/_/g, ' ')
+}
+function formatValue(f: FactItem): string {
+  const v = typeof f.value === 'number' ? f.value.toLocaleString() : String(f.value)
+  return f.unit ? `${v} ${f.unit}` : v
+}
+
+/** Group flat facts into category → subject → attributes, mirroring the trie. */
+function groupFacts(facts: FactItem[]) {
+  const byCat = new Map<string, Map<string, FactItem[]>>()
+  for (const f of facts) {
+    const cat = f.category ?? 'other'
+    const subj = f.subject ?? '—'
+    if (!byCat.has(cat)) byCat.set(cat, new Map())
+    const subs = byCat.get(cat)!
+    if (!subs.has(subj)) subs.set(subj, [])
+    subs.get(subj)!.push(f)
+  }
+  return byCat
 }
 
 function timeAgo(iso?: string): string {
@@ -24,6 +54,7 @@ function timeAgo(iso?: string): string {
 
 export default function MemoryPage() {
   const [memories, setMemories] = useState<MemoryItem[]>([])
+  const [facts, setFacts] = useState<FactItem[]>([])
   const [stats, setStats] = useState<MemoryStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
@@ -36,6 +67,7 @@ export default function MemoryPage() {
     try {
       const r = await api.memory()
       setMemories(r.memories)
+      setFacts(r.facts)
       setStats(r.stats)
     } catch {
       /* ignore */
@@ -69,6 +101,7 @@ export default function MemoryPage() {
   }
 
   const recalledIds = new Set((recalled ?? []).map((r) => r.id))
+  const grouped = groupFacts(facts)
 
   return (
     <DashboardLayout title="Memory">
@@ -83,8 +116,9 @@ export default function MemoryPage() {
               What Kredex remembers about your shop
             </h2>
             <p className="mt-0.5 text-sm text-zinc-500">
-              Durable facts, preferences, and events — distilled from your chats, kept across sessions. The most
-              important, recently-used memories are recalled first; stale ones fade.
+              Two kinds of memory, shared across every chat: <span className="font-medium text-zinc-700 dark:text-zinc-300">structured facts</span> —
+              prices, terms, contacts — looked up and overwritten instantly by key; and <span className="font-medium text-zinc-700 dark:text-zinc-300">narrative memories</span> —
+              habits and preferences recalled by meaning. Tell Kredex once, in any chat; it remembers everywhere.
             </p>
           </div>
         </div>
@@ -102,6 +136,68 @@ export default function MemoryPage() {
                 </span>
               ))}
             </div>
+          </div>
+        )}
+      </section>
+
+      {/* structured knowledge — the canonical-key trie, grouped */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2 px-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Structured knowledge</h3>
+          <span className="rounded-full bg-[#EB4A26]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#EB4A26]">Trie · exact recall</span>
+        </div>
+        {loading ? (
+          <div className="h-32 animate-pulse rounded-3xl bg-zinc-200/60 dark:bg-zinc-800/60" />
+        ) : facts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-zinc-300 bg-white/50 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
+            <Icon icon="solar:database-linear" width="30" className="text-zinc-400" />
+            <p className="max-w-md text-sm text-zinc-500">
+              No structured facts yet. Say things like <span className="italic">"I sell a bag of rice for ₦32,000"</span> or
+              <span className="italic"> "Tunde pays on Fridays"</span> in Chat — they'll be stored here by key and updated in place.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {[...grouped.entries()].map(([cat, subjects]) => {
+              const meta = CATEGORY[cat] ?? { label: cat, icon: 'solar:tag-linear' }
+              return (
+                <div key={cat} className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-xl bg-[#EB4A26]/10 text-[#EB4A26]">
+                      <Icon icon={meta.icon} width="17" />
+                    </span>
+                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{meta.label}</h4>
+                    <span className="ml-auto text-[11px] text-zinc-400">{subjects.size} {subjects.size === 1 ? 'entry' : 'entries'}</span>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-3">
+                    {[...subjects.entries()].map(([subj, attrs]) => (
+                      <div key={subj} className="rounded-2xl bg-[#F3F4EF]/70 p-3 dark:bg-zinc-800/50">
+                        <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold capitalize text-zinc-700 dark:text-zinc-200">
+                          <Icon icon="solar:hashtag-linear" width="12" className="text-zinc-400" />
+                          {subj}
+                        </div>
+                        <div className="flex flex-col divide-y divide-zinc-200/70 dark:divide-zinc-700/50">
+                          {attrs.map((f) => (
+                            <div key={f.id} className="flex items-center gap-2 py-1.5">
+                              <span className="text-xs capitalize text-zinc-500">{prettyAttr(f.attribute)}</span>
+                              <span className="ml-auto font-mono text-sm font-semibold text-zinc-900 dark:text-zinc-100">{formatValue(f)}</span>
+                              {f.changes > 0 && (
+                                <span
+                                  className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+                                  title={`Overwritten ${f.changes} time${f.changes === 1 ? '' : 's'} across your chats`}
+                                >
+                                  <Icon icon="solar:refresh-linear" width="10" /> {f.changes}×
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </section>
@@ -149,7 +245,10 @@ export default function MemoryPage() {
 
       {/* memory list */}
       <section className="flex flex-col gap-3">
-        <h3 className="px-1 text-sm font-semibold uppercase tracking-wider text-zinc-500">Stored memories · by importance</h3>
+        <div className="flex items-center gap-2 px-1">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Narrative memories</h3>
+          <span className="rounded-full bg-[#7C5CFF]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#7C5CFF]">Embeddings · semantic recall</span>
+        </div>
         {loading ? (
           <div className="h-40 animate-pulse rounded-3xl bg-zinc-200/60 dark:bg-zinc-800/60" />
         ) : memories.length === 0 ? (

@@ -87,6 +87,20 @@ export interface MemoryStats {
   kinds: Record<string, number>
 }
 
+/** A structured, overwriteable fact (Tier 1 — the canonical-key trie). */
+export interface FactItem {
+  id: string
+  key: string
+  category?: string
+  subject?: string
+  attribute?: string
+  value: string | number
+  unit?: string
+  label?: string
+  updatedAt: string
+  changes: number // how many times this fact has been overwritten
+}
+
 export interface NotificationItem {
   id: string
   type: 'reminder' | 'low_stock' | 'debt_due'
@@ -183,7 +197,14 @@ export interface ChatHistoryMessage {
   receipt?: (ParsedReceipt & { committed?: boolean }) | null
 }
 
+export interface ChatSessionMeta {
+  id: string
+  title: string
+  lastMessageAt: string
+}
+
 export type ChatEvent =
+  | { type: 'session'; sessionId: string }
   | { type: 'intent'; intent: string }
   | { type: 'action'; name: string; result: unknown }
   | { type: 'token'; value: string }
@@ -234,9 +255,18 @@ export const api = {
   pnl: () => request<PnlData>('/pnl'),
   revenue: (range: string) =>
     request<{ series: number[]; labels: string[]; total: number; range: string }>(`/dashboard/revenue?range=${range}`),
-  chatHistory: () => request<{ messages: ChatHistoryMessage[] }>('/chat/history'),
-  saveMessage: (role: 'user' | 'assistant', text: string, receipt?: unknown) =>
-    request<{ ok: boolean; id?: string }>('/chat/message', { method: 'POST', body: { role, text, receipt } }),
+  chatSessions: () => request<{ sessions: ChatSessionMeta[] }>('/chat/sessions'),
+  createSession: () => request<ChatSessionMeta>('/chat/sessions', { method: 'POST' }),
+  deleteSession: (id: string) => request<{ ok: boolean }>(`/chat/sessions/${id}`, { method: 'DELETE' }),
+  chatHistory: (sessionId?: string) =>
+    request<{ sessionId: string | null; messages: ChatHistoryMessage[] }>(
+      `/chat/history${sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : ''}`,
+    ),
+  saveMessage: (role: 'user' | 'assistant', text: string, receipt?: unknown, sessionId?: string) =>
+    request<{ ok: boolean; id?: string; sessionId?: string }>('/chat/message', {
+      method: 'POST',
+      body: { role, text, receipt, sessionId },
+    }),
   markReceiptCommitted: (id: string) =>
     request<{ ok: boolean }>(`/chat/message/${id}/receipt-committed`, { method: 'PATCH' }),
   settings: () => request<SettingsData>('/settings'),
@@ -256,7 +286,7 @@ export const api = {
     request<{ invoice: Invoice }>(`/invoices/${id}`, { method: 'PATCH', body: { status } }),
   commitReceipt: (body: { supplier: string | null; items: ReceiptItem[] }) =>
     request<{ ok: boolean; logged: number }>('/receipt/commit', { method: 'POST', body }),
-  memory: () => request<{ memories: MemoryItem[]; stats: MemoryStats }>('/memory'),
+  memory: () => request<{ memories: MemoryItem[]; stats: MemoryStats; facts: FactItem[] }>('/memory'),
   memoryRecall: (q: string) => request<{ recalled: { id: string; text: string; score: number }[] }>(`/memory/recall?q=${encodeURIComponent(q)}`),
   forgetMemory: (id: string) => request<{ ok: true }>(`/memory/${id}/forget`, { method: 'POST' }),
   notifications: () => request<{ notifications: NotificationItem[]; count: number }>('/notifications'),
@@ -322,14 +352,18 @@ export async function parseReceipt(file: File): Promise<ParsedReceipt> {
  * Stream a chat message over SSE. We use fetch (not EventSource) so we can POST
  * with the Authorization header. Calls onEvent for each parsed event.
  */
-export async function streamChat(message: string, onEvent: (event: ChatEvent) => void): Promise<void> {
+export async function streamChat(
+  message: string,
+  onEvent: (event: ChatEvent) => void,
+  sessionId?: string,
+): Promise<void> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ message, sessionId }),
   })
   if (!res.ok || !res.body) throw new Error('Chat request failed')
 
