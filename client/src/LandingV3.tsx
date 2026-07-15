@@ -7,8 +7,8 @@ import shopScene from './assets/kredex-shop-scene.jpg'
 /*
  * Landing V3 — "The Kredex Ledger", an editorial / vintage-gazette landing page.
  * Inspiration: warm paper poster, big display serif, drop-capped columns, and a
- * painterly Nigerian market scene (kredex-shop-scene.jpg) where merchants keep
- * their books on a Kredex dashboard — so a vendor instantly reads what it does.
+ * photo of a Nigerian shop owner recording sales in her ledger (kredex-shop-scene.jpg)
+ * — so a vendor instantly reads what the product is for.
  *
  * Type: Fraunces (display serif) + JetBrains Mono (labels), loaded in index.html.
  * Palette: warm cream paper + ink brown + Kredex orange (a touch lighter in fills).
@@ -130,8 +130,8 @@ export default function LandingV3() {
           <div className="rounded-[10px] border-2 border-[#2A2622] bg-[#F6EFDF] p-2 shadow-[12px_14px_0_rgba(42,38,34,0.12)]">
             <img
               src={shopScene}
-              alt="Nigerian shop owners at their store — shelves of goods, a delivery truck and Vespa — with their books kept on a Kredex dashboard"
-              className="w-full rounded-[6px] border border-[#2A2622]/25"
+              alt="A Nigerian shop owner recording her sales in a ledger at her counter, shelves stocked with goods behind her"
+              className="aspect-[4/3] w-full rounded-[6px] border border-[#2A2622]/25 object-cover object-center sm:aspect-[16/9]"
             />
           </div>
           <p className="mt-4 text-center">
