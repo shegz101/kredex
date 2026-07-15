@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { ShopModel, TransactionModel, InventoryItemModel } from "../models/index.js";
-import { qwen, MODELS } from "../lib/qwen.js";
+import { completeWithFallback, MODELS } from "../lib/qwen.js";
 import { fmtMoney } from "../lib/money.js";
 
 const router = Router();
@@ -82,10 +82,11 @@ router.get("/", requireAuth, async (req, res) => {
       items: items.map((i) => ({ name: i.name, unitsSold: i.unitsSold, profit: Math.round(i.profit), margin: Math.round(i.margin * 100) })),
     };
 
-    // Qwen3.7-Max writes the honest verdict.
+    // Qwen3.7-Max writes the honest verdict; if the flagship is down, fall back
+    // to the fast model, then to a computed sentence — so the owner always gets one.
     let narrative = "";
     try {
-      const completion = await qwen.chat.completions.create({
+      const completion = await completeWithFallback({
         model: MODELS.brain,
         temperature: 0.4,
         messages: [
@@ -101,7 +102,7 @@ router.get("/", requireAuth, async (req, res) => {
               `\n\nIn 2–4 short sentences: tell the owner plainly whether they are making money this month, the single biggest reason (use the per-item margins — name the best and weakest earner), and one practical suggestion. Don't restate every number.`,
           },
         ],
-      });
+      }, MODELS.agent);
       narrative = completion.choices[0]?.message?.content?.toString().trim() ?? "";
     } catch (e) {
       console.error("pnl narrative failed:", e);

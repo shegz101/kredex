@@ -242,7 +242,11 @@ router.post("/", requireAuth, async (req, res) => {
     send("done", { reply, actions });
   } catch (err) {
     console.error("chat error:", err);
-    send("error", { error: "Something went wrong handling your message." });
+    // Graceful degradation: the agent call failed even after the Qwen client's
+    // automatic retries. Tell the owner plainly and invite a retry — nothing is lost.
+    send("error", {
+      error: "I couldn't reach my AI service just now. Please try that again in a moment — your data is safe.",
+    });
   } finally {
     res.end();
   }

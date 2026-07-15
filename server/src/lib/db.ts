@@ -18,6 +18,15 @@ export async function connectDB(): Promise<void> {
   mongoose.connection.on("error", (err) =>
     console.error("❌ MongoDB error:", err.message)
   );
+  mongoose.connection.on("disconnected", () =>
+    console.warn("⚠️  MongoDB disconnected — driver will auto-reconnect")
+  );
 
-  await mongoose.connect(env.MONGODB_URI);
+  // The driver buffers commands and auto-reconnects through brief blips; a short
+  // server-selection timeout means a real outage fails a request fast (clean 500)
+  // instead of hanging, while transient hiccups are absorbed transparently.
+  await mongoose.connect(env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5_000,
+    socketTimeoutMS: 45_000,
+  });
 }

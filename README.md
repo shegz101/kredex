@@ -40,6 +40,7 @@ Built for the **Global AI Hackathon Series with Qwen Cloud** — **MemoryAgent**
 - [What it does](#what-it-does)
 - [Architecture](#architecture)
 - [The agent layer](#the-agent-layer)
+- [Reliability & scale](#reliability--scale)
 - [Requirements](#requirements)
 - [Run with Docker (easiest)](#run-with-docker-easiest)
 - [Local development (without Docker)](#local-development-without-docker)
@@ -178,10 +179,9 @@ facts and a **vector store** of narrative memory — and performs **hybrid recal
 (Alibaba Model Studio / DashScope) through one OpenAI-compatible client, and the
 whole stack is deployed on **Alibaba Cloud**.
 
-![Kredex system architecture overview](docs/assets/architecture-overview.png)
+![Kredex system architecture overview](docs/assets/kredex_system_architecture.png)
 
 > Deployment: Browser → Caddy (HTTPS) → nginx → Express → MongoDB, on Alibaba Cloud.
-> Vector source: [`architecture-overview.svg`](docs/assets/architecture-overview.svg)
 
 **The Qwen model map** (`server/src/lib/qwen.ts` — one edit swaps a version):
 
@@ -218,6 +218,55 @@ Owner message  (in some chat session)
 - `server/src/services/memory.ts` — Tier 2: `rememberFromTurn()` (extraction), `recall()` (scored + MMR + reinforcement), `forget()` (eviction), `listMemories()`.
 - `server/src/lib/embeddings.ts` — `embed()` + `cosine()`.
 - `server/src/routes/memory.routes.ts` — the Memory / knowledge tab API (facts + memories, recall preview, forget).
+
+## Reliability & scale
+
+Kredex is designed to **degrade gracefully** — an owner logging a sale should never
+see a stack trace because an AI call blipped.
+
+**Failure modes (what happens when a dependency misbehaves):**
+
+- **A Qwen call fails or times out.** The OpenAI-compatible client auto-retries
+  transient errors (timeouts, 429s, 5xx) **twice with exponential backoff**, and caps
+  each call at a **30s timeout** so a hung upstream fails fast instead of stalling the
+  request (`server/src/lib/qwen.ts`). If it still fails, the chat route emits a clean
+  SSE `error` event — the owner is asked to retry and **no data is lost** (the ledger
+  write is separate from the reply). The heavy P&L path uses `completeWithFallback`:
+  `qwen3.7-max` → `qwen3.5-flash` → a computed plain-text verdict, so a verdict always
+  comes back.
+- **A trie miss (structured fact not found).** Recall silently **falls through** — the
+  vector tier runs in parallel, and the agent still has **live tools** that query the
+  real ledger. So "how much did I sell rice for?" is answered from actual transactions
+  even with no stored fact. Never a hard failure.
+- **A vector miss (nothing above the similarity gate).** The agent simply **proceeds
+  without injected memory** — it still has the system prompt and tools, and asks a
+  clarifying question only when it genuinely lacks a specific value.
+- **MongoDB blips.** The Mongoose driver **buffers commands and auto-reconnects**
+  through brief interruptions; a short `serverSelectionTimeoutMS` means a real outage
+  fails a request **cleanly** (caught by the route → 500 / SSE error) rather than
+  hanging. Long-term **memory writes are best-effort and fire-and-forget** — a failed
+  write is logged and dropped; it never breaks the owner's reply.
+
+Both recall paths are wrapped to **return empty on any error**, so the worst case for
+memory is "answer without memory context," not a failed turn.
+
+**Scaling past one VM:**
+
+- **The API is stateless** — JWT auth, no server-side session state — so it scales
+  **horizontally**: run N Express containers behind nginx/Caddy with no sticky
+  sessions. The current single-VM Docker Compose deployment is the hackathon setup;
+  this is the path beyond it.
+- **Data tier:** MongoDB → a **replica set** for HA and read scaling; hot paths are
+  already indexed (unique `(shopId, key)` on facts; `shopId + active + importance` on
+  memories; `sessionId + createdAt` on messages); shard by `shopId` if it ever grows
+  that far.
+- **One honest caveat:** the per-shop **trie cache is in-memory per instance**. With
+  multiple API instances each keeps its own, but it's rebuilt from MongoDB (the source
+  of truth) on miss and carries a **60s TTL**, bounding cross-instance staleness to
+  ≤60s. The clear upgrade is a shared **Redis** cache.
+- **The real bottleneck is Qwen, not our compute** — scaling means concurrency and
+  rate limits against DashScope; the built-in rate limiter protects the API, and a
+  **circuit breaker** is the natural next step.
 
 ## Requirements
 
