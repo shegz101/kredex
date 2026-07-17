@@ -22,6 +22,8 @@ const CANDIDATE_FETCH = 400; // active memories scored per recall
 const MIN_SIM = 0.36; // semantic gate (text-embedding-v4 packs paraphrases into ~0.3–0.5)
 const DEDUP_SIM = 0.82; // ≥ this against an existing memory → merge (reinforce) instead of duplicating
 const RECENCY_HALFLIFE_DAYS = 30;
+const STALE_DAYS = 120; // low-importance memory untouched this long → timely forgetting
+const STALE_IMPORTANCE = 3; // only decay memories at/below this importance (never the critical ones)
 const MMR_LAMBDA = 0.72; // relevance vs. diversity in selection
 const CHAR_BUDGET = 720; // ~ limited context window for injected memories
 const DEFAULT_K = 6;
@@ -184,6 +186,24 @@ export async function recallDetailed(shopId: string, query: string, k = DEFAULT_
 // ---------------------------------------------------------------------------
 
 async function forget(shopId: string): Promise<void> {
+  // 1. TIME-BASED decay — retire stale, low-value knowledge (outdated info).
+  //    Soft-deactivate (active:false) rather than hard-delete: auditable and
+  //    reversible, and it keeps supersededBy chains intact. Pinned + important
+  //    memories are never touched, no matter how old.
+  const staleBefore = new Date(Date.now() - STALE_DAYS * 86_400_000);
+  await MemoryModel.updateMany(
+    {
+      shopId,
+      active: true,
+      pinned: { $ne: true },
+      importance: { $lte: STALE_IMPORTANCE },
+      lastAccessedAt: { $lt: staleBefore },
+    },
+    { $set: { active: false } }
+  );
+
+  // 2. CAP-BASED eviction — if a shop is still over the hard cap after decay,
+  //    hard-delete the lowest importance×recency memories to bound storage.
   const count = await MemoryModel.countDocuments({ shopId, active: true });
   if (count <= MAX_PER_SHOP) return;
   const excess = count - MAX_PER_SHOP;

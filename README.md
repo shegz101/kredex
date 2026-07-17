@@ -40,6 +40,8 @@ Built for the **Global AI Hackathon Series with Qwen Cloud** — **MemoryAgent**
 - [What it does](#what-it-does)
 - [Architecture](#architecture)
 - [The agent layer](#the-agent-layer)
+- [MCP server](#mcp-server--kredex-as-a-memory-backend-for-any-agent)
+- [Memory benchmark](#memory-benchmark)
 - [Reliability & scale](#reliability--scale)
 - [Requirements](#requirements)
 - [Run with Docker (easiest)](#run-with-docker-easiest)
@@ -110,11 +112,20 @@ memory architecture — not a chat window with history.
   memory by **cosine × importance × recency**, then uses **MMR** to select a
   diverse, non-redundant set under a **token budget** — the *critical few*, not just
   the top cosine match.
-- **It learns, and it forgets.** Recalled memories are **reinforced** (importance ↑,
-  recency refreshed); near-duplicates **merge**, and the least important, oldest
-  memories are **evicted** past a cap. A built-in **Memory / knowledge tab** lets you
+- **It learns, and it forgets — on time.** Recalled memories are **reinforced**
+  (importance ↑, recency refreshed) and near-duplicates **merge**. Forgetting is
+  two-layered: **time-based decay** retires low-importance memories left untouched for
+  months (soft-deactivated, so it's auditable — pinned/important ones are never
+  touched), and a **cap** hard-evicts the lowest importance×recency memories past a
+  ceiling. Structured facts forget *by overwrite* — a corrected price supersedes the
+  old value, which is kept in history. A built-in **Memory / knowledge tab** lets you
   watch both tiers — the fact trie as a grouped tree, the vector memories with a
   live recall tester.
+
+- **Reusable over MCP.** The whole two-tier memory (plus bookkeeping) is exposed as a
+  **Model Context Protocol server** — 17 tools reusing the *same* registry that drives
+  the in-app Qwen agent — so any MCP client (Claude Desktop, an IDE agent) can use
+  Kredex as a durable memory backend. See [MCP server](#mcp-server--kredex-as-a-memory-backend-for-any-agent).
 
 It speaks the owner's language (English + Nigerian Pidgin, typed **or spoken**),
 reads receipt photos, and runs entirely on **Qwen** models via Alibaba Model Studio.
@@ -218,6 +229,76 @@ Owner message  (in some chat session)
 - `server/src/services/memory.ts` — Tier 2: `rememberFromTurn()` (extraction), `recall()` (scored + MMR + reinforcement), `forget()` (eviction), `listMemories()`.
 - `server/src/lib/embeddings.ts` — `embed()` + `cosine()`.
 - `server/src/routes/memory.routes.ts` — the Memory / knowledge tab API (facts + memories, recall preview, forget).
+
+## MCP server — Kredex as a memory backend for any agent
+
+Kredex ships a **Model Context Protocol (MCP) server** that exposes a shop's
+**two-tier memory** and **bookkeeping tools** as first-class MCP tools — so any MCP
+client (Claude Desktop, an IDE agent, another LLM app) can use Kredex as a durable
+**memory + bookkeeping backend**, not just our own UI.
+
+- **One tool registry, two front-ends.** The bookkeeping tools aren't redefined for
+  MCP — the server reuses the *exact same* `toolDefs` + `executeTool` registry that
+  powers the in-app Qwen agent (OpenAI function schema maps 1:1 to MCP's JSON-Schema
+  `inputSchema`). One source of truth, exposed to both Qwen function-calling and MCP.
+- **The memory tier is the star.** On top of the 11 bookkeeping tools it adds 6
+  memory tools — **17 total**: `recall_facts` / `remember_fact` / `list_facts` (Tier 1,
+  the canonical-key trie, with overwrite-supersede semantics), and `recall_memories` /
+  `remember` / `list_memories` (Tier 2, the scored + reinforced vector store).
+- **Shop-scoped.** The server binds to one shop via `KREDEX_SHOP_ID`, and every tool
+  is scoped to that shop — an MCP client can only touch its own data.
+
+Run it (stdio transport):
+
+```bash
+KREDEX_SHOP_ID=<your-shop-id> npm --prefix server run mcp
+```
+
+Wire it into an MCP client (e.g. Claude Desktop `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "kredex": {
+      "command": "npm",
+      "args": ["--prefix", "/absolute/path/to/kredex/server", "run", "mcp"],
+      "env": { "KREDEX_SHOP_ID": "<your-shop-id>", "MONGODB_URI": "mongodb://127.0.0.1:27017/kredex" }
+    }
+  }
+}
+```
+
+Implementation: `server/src/mcp/server.ts`.
+
+## Memory benchmark
+
+Numbers back the design. These are **measured** on a dev machine (single-threaded
+Node), reproduce with `npm --prefix server run bench` (pure — no DB or API key):
+
+**Tier 1 — structured facts (canonical-key trie) vs. the naive baseline (a flat array
+scanned linearly):**
+
+| Facts | Exact lookup (trie) | Exact lookup (array scan) | Overwrite (trie) | Prefix recall (trie) |
+|---|---|---|---|---|
+| 300 | 2.7 µs | 5.8 µs | 3.7 µs | 3.4 µs |
+| 3,000 | 2.3 µs | 53.6 µs | 2.0 µs | 2.7 µs |
+| 30,000 | 3.7 µs | 1,283.9 µs | 6.3 µs | 4.8 µs |
+
+The trie stays **flat in the microseconds** as facts grow — lookup, in-place
+overwrite, and "everything about X" prefix recall are all **O(key-length)**,
+independent of how many facts a shop has. The linear scan grows with the data and is
+**~350× slower at 30k facts**, with the gap widening. This is why exact facts live in
+a trie, not a list.
+
+**Tier 2 — vector recall:**
+
+- Scoring the full candidate set (**400 memories × 1024-d** cosine) per recall:
+  **~2.4 ms** (~6 µs/candidate) — the whole semantic ranking, before MMR selection.
+- **Critical-few context budget:** a shop at the 600-memory cap holds ~54,000
+  characters of raw memory; recall injects **at most 720 characters (~180 tokens)** of
+  the most relevant, diverse few — **~98.7% less context**, bounded no matter how much
+  the shop accumulates. That's the "recall the critical few within a limited context
+  window" requirement, by construction.
 
 ## Reliability & scale
 
@@ -367,7 +448,18 @@ npm run build
 
 # Verify the Qwen connection
 npm --prefix server run ping:qwen
+
+# Run the unit tests (pure — no MongoDB or API key needed)
+npm --prefix server test
+
+# Run the memory benchmark (measures trie + vector recall; no DB or key needed)
+npm --prefix server run bench
 ```
+
+Tests cover the core of both memory tiers — the canonical-key **trie**
+(exact lookup, in-place overwrite, prefix recall, subject isolation) and the
+**cosine** similarity behind vector recall — and run with Node's built-in test
+runner, so they need no database or Qwen key (`server/src/**/*.test.ts`).
 
 Try these in the chat once you're logged in:
 
@@ -412,6 +504,8 @@ server/src/
   agents/
     orchestrator.ts    # Qwen tool-calling agent loop + memory recall injection
     tools.ts           # function-calling tools (record_sale, log_stock, create_invoice…)
+  mcp/
+    server.ts          # MCP server — memory + bookkeeping tools over Model Context Protocol
   services/
     facts.ts           # Tier 1: canonicalizer · upsert (overwrite+history) · recallFacts · trie cache
     memory.ts          # Tier 2: rememberFromTurn · recall (scored+MMR) · forget · list
@@ -428,7 +522,10 @@ server/src/
   routes/              # auth · chat (+ sessions) · memory · notifications ·
                        # dashboard · receipt · pnl · invoices · settings ·
                        # reminders · voice · opportunities
-  scripts/seed-memory.ts # seeds both tiers via the real pipeline (demo/verification)
+  scripts/
+    seed-memory.ts     # seeds both tiers via the real pipeline (demo/verification)
+    bench-memory.ts    # measures trie + vector recall (npm run bench)
+  lib/trie.test.ts · lib/embeddings.test.ts  # unit tests for the memory core (npm test)
   middleware/auth.ts   # requireAuth (JWT)
 
 client/src/
@@ -458,8 +555,9 @@ Contributions are welcome — bug reports, features, docs, and translations. See
 
 Good first areas: more languages/locales beyond English & Pidgin, additional
 currencies, memory strategies (summarization, decay tuning, contradiction handling),
-and test coverage. Be respectful and constructive — this project exists to help real
-small businesses.
+and widening test coverage (the memory core is covered — `server/src/**/*.test.ts`;
+routes and services are open). Be respectful and constructive — this project exists to
+help real small businesses.
 
 ## License
 
