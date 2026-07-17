@@ -6,6 +6,7 @@ import RequireAuth from './components/RequireAuth'
 import Landing from './Landing'
 import LandingV2 from './LandingV2'
 import LandingV3 from './LandingV3'
+import Docs from './Docs'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -29,6 +30,7 @@ export default function App() {
         <AuthProvider>
           <Routes>
           <Route path="/" element={<LandingV3 />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="/v2" element={<LandingV2 />} />
           <Route path="/classic" element={<Landing />} />
           <Route path="/login" element={<Login />} />

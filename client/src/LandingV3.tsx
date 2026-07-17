@@ -102,10 +102,15 @@ export default function LandingV3() {
             <Mono className="text-[10px] sm:text-[11px]">Kredex Ledger Co.</Mono>
           </div>
           <Mono className="hidden text-[10px] text-[#2A2622]/70 md:block">AI Bookkeeping for Shops · Stores · Vendors</Mono>
-          <Link to="/register" className="group inline-flex items-center gap-1.5 border-2 border-[#2A2622] px-3 py-1.5 text-[#2A2622] transition-colors hover:bg-[#2A2622] hover:text-[#F4ECDC]">
-            <Mono className="text-[10px] font-semibold">Open the ledger</Mono>
-            <Icon icon="solar:arrow-right-linear" width="14" className="transition-transform group-hover:translate-x-0.5" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/docs" className="hover:text-[#EB4A26]">
+              <Mono className="text-[10px]">Docs</Mono>
+            </Link>
+            <Link to="/register" className="group inline-flex items-center gap-1.5 border-2 border-[#2A2622] px-3 py-1.5 text-[#2A2622] transition-colors hover:bg-[#2A2622] hover:text-[#F4ECDC]">
+              <Mono className="text-[10px] font-semibold">Open the ledger</Mono>
+              <Icon icon="solar:arrow-right-linear" width="14" className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
         </header>
 
         {/* ---- hero masthead ---- */}
@@ -284,6 +289,7 @@ export default function LandingV3() {
             </div>
             <Mono className="text-[10px] text-[#2A2622]/60">Know what you’re owed · Know your business</Mono>
             <div className="flex items-center gap-4">
+              <Link to="/docs"><Mono className="text-[10px] hover:text-[#EB4A26]">Docs</Mono></Link>
               <Link to="/login"><Mono className="text-[10px] hover:text-[#EB4A26]">Log in</Mono></Link>
               <Link to="/register"><Mono className="text-[10px] hover:text-[#EB4A26]">Start free</Mono></Link>
             </div>
