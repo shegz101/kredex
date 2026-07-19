@@ -23,6 +23,23 @@ export interface ActionEvent {
   result: any;
 }
 
+/**
+ * Intents that always require a tool to actually happen. When the local classifier
+ * flags one of these, we force the model's hand on the first round with
+ * tool_choice:"required" — otherwise the flash model sometimes fabricates a
+ * confirmation ("I've recorded the sale…") without ever calling record_sale, which
+ * silently corrupts the books. "chat" and anything unclassified stay on "auto".
+ */
+const ACTION_INTENTS = new Set<Intent>([
+  "log_stock",
+  "sale",
+  "credit_sale",
+  "payment",
+  "query_debt",
+  "query_stock",
+  "summary",
+]);
+
 export interface RunAgentOptions {
   message: string;
   shopId: string;
@@ -103,8 +120,11 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
       model: MODELS.agent,
       messages,
       tools: toolDefs,
-      tool_choice: "auto",
+      // First round: force a tool call for action intents so the model can't fabricate
+      // a confirmation without doing the work. Later rounds relax so it can stop and reply.
+      tool_choice: round === 0 && ACTION_INTENTS.has(intent) ? "required" : "auto",
       temperature: 0.2,
+      enable_thinking: false, // no chain-of-thought on the agent path: faster, and required for tool_choice:"required"
     }, MODELS.agentFallback);
 
     const msg = res.choices[0].message;
@@ -133,6 +153,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
     messages,
     temperature: 0.4,
     stream: true,
+    enable_thinking: false, // stop <think> reasoning leaking into the streamed reply at the source
   }, MODELS.agentFallback);
 
   let reply = "";

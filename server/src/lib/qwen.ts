@@ -49,15 +49,15 @@ export function isQuotaError(err: unknown): boolean {
  *     first; the flagship still has budget), so judging never dies on a 403.
  */
 export async function completeWithFallback(
-  params: ChatCompletionCreateParamsNonStreaming,
+  params: ChatCompletionCreateParamsNonStreaming & { enable_thinking?: boolean },
   fallbackModel: string
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
   try {
-    return await qwen.chat.completions.create(params);
+    return await qwen.chat.completions.create(params as ChatCompletionCreateParamsNonStreaming);
   } catch (err) {
     const why = isQuotaError(err) ? "free quota exhausted" : (err as Error).message;
     console.warn(`qwen: ${params.model} failed (${why}), falling back to ${fallbackModel}`);
-    return await qwen.chat.completions.create({ ...params, model: fallbackModel });
+    return await qwen.chat.completions.create({ ...params, model: fallbackModel } as ChatCompletionCreateParamsNonStreaming);
   }
 }
 
@@ -68,15 +68,15 @@ export async function completeWithFallback(
  * returned stream identically either way.
  */
 export async function streamWithFallback(
-  params: ChatCompletionCreateParamsStreaming,
+  params: ChatCompletionCreateParamsStreaming & { enable_thinking?: boolean },
   fallbackModel: string
 ): Promise<Stream<OpenAI.Chat.Completions.ChatCompletionChunk>> {
   try {
-    return await qwen.chat.completions.create(params);
+    return await qwen.chat.completions.create(params as ChatCompletionCreateParamsStreaming);
   } catch (err) {
     const why = isQuotaError(err) ? "free quota exhausted" : (err as Error).message;
     console.warn(`qwen: ${params.model} stream failed (${why}), falling back to ${fallbackModel}`);
-    return await qwen.chat.completions.create({ ...params, model: fallbackModel });
+    return await qwen.chat.completions.create({ ...params, model: fallbackModel } as ChatCompletionCreateParamsStreaming);
   }
 }
 
