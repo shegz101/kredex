@@ -1,10 +1,11 @@
 import OpenAI from "openai";
-import { qwen, MODELS } from "../lib/qwen.js";
+import { MODELS, completeWithFallback, streamWithFallback } from "../lib/qwen.js";
 import { ShopModel } from "../models/index.js";
 import { classify, type Intent } from "../lib/classifier.js";
 import { toolDefs, executeTool } from "./tools.js";
 import { recall } from "../services/memory.js";
 import { recallFacts } from "../services/facts.js";
+import { makeThinkFilter } from "../lib/think-filter.js";
 
 /**
  * The agent loop (multi-agent routing in one place):
@@ -98,13 +99,13 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
 
   // ---- Phase 1: resolve tools (non-streamed) ----
   for (let round = 0; round < 4; round++) {
-    const res = await qwen.chat.completions.create({
+    const res = await completeWithFallback({
       model: MODELS.agent,
       messages,
       tools: toolDefs,
       tool_choice: "auto",
       temperature: 0.2,
-    });
+    }, MODELS.agentFallback);
 
     const msg = res.choices[0].message;
     if (!msg.tool_calls || msg.tool_calls.length === 0) break; // no (more) tools needed
@@ -127,21 +128,30 @@ export async function runAgent(opts: RunAgentOptions): Promise<{ reply: string; 
   }
 
   // ---- Phase 2: stream the final natural-language reply (no tools) ----
-  const stream = await qwen.chat.completions.create({
+  const stream = await streamWithFallback({
     model: MODELS.agent,
     messages,
     temperature: 0.4,
     stream: true,
-  });
+  }, MODELS.agentFallback);
 
   let reply = "";
+  let started = false;
+  const emit = (t: string) => {
+    if (!started) {
+      t = t.replace(/^\s+/, ""); // trim leading whitespace left after a stripped think block
+      if (!t) return;
+      started = true;
+    }
+    reply += t;
+    onToken?.(t);
+  };
+  const think = makeThinkFilter(emit);
   for await (const chunk of stream) {
     const token = chunk.choices[0]?.delta?.content ?? "";
-    if (token) {
-      reply += token;
-      onToken?.(token);
-    }
+    if (token) think.feed(token);
   }
+  think.flush();
 
   return { reply, actions };
 }

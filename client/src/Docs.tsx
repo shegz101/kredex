@@ -145,6 +145,56 @@ function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
   )
 }
 
+/** Screenshots for the walkthrough — filled in as they arrive (slot → imported asset). */
+const SHOTS: Record<string, string> = {
+  // e.g. '01-dashboard-empty': dashboardEmptyPng   (import the asset at the top of the file, then map it here)
+}
+
+/** A message the shop owner types into Kredex. */
+function Say({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex justify-end">
+      <div className="max-w-[88%] rounded-[14px] rounded-br-[4px] border-2 border-[#2A2622] bg-[#F8F2E4] px-4 py-2.5">
+        <Mono className="text-[8px] text-[#2A2622]/45">You type</Mono>
+        <p className="mt-1 text-[15px] leading-snug text-[#2A2622]">{children}</p>
+      </div>
+    </div>
+  )
+}
+
+/** A UI action the reader should take (not a typed message). */
+function Do({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-[14px] italic text-[#2A2622]/70" style={{ fontFamily: DISPLAY }}>
+      <Icon icon="solar:cursor-square-linear" width="16" style={{ color: ORANGE }} />
+      <span>{children}</span>
+    </div>
+  )
+}
+
+/** A framed screenshot with an editorial caption; shows a labelled placeholder until the image lands. */
+function Shot({ slot, caption, alt, star = false }: { slot: string; caption: string; alt?: string; star?: boolean }) {
+  const src = SHOTS[slot]
+  return (
+    <figure className="my-1">
+      {src ? (
+        <div className={`overflow-hidden rounded-[10px] border-2 ${star ? 'border-[#EB4A26]' : 'border-[#2A2622]'} shadow-[6px_7px_0_rgba(42,38,34,0.12)]`}>
+          <img src={src} alt={alt || caption} className="w-full" loading="lazy" />
+        </div>
+      ) : (
+        <div className={`flex aspect-[16/10] w-full flex-col items-center justify-center rounded-[10px] border-2 border-dashed ${star ? 'border-[#EB4A26]/50' : 'border-[#2A2622]/25'} bg-[#F8F2E4]`}>
+          <Icon icon="solar:gallery-add-linear" width="26" className="text-[#2A2622]/30" />
+          <Mono className="mt-2 text-[9px] text-[#2A2622]/40">Screenshot · {slot}</Mono>
+        </div>
+      )}
+      <figcaption className="mt-2 flex items-center gap-2">
+        <span className="h-px w-5" style={{ background: star ? ORANGE : '#2A2622' }} />
+        <Mono className={`text-[9px] ${star ? 'text-[#EB4A26]' : 'text-[#2A2622]/60'}`}>{caption}</Mono>
+      </figcaption>
+    </figure>
+  )
+}
+
 /** A titled, anchorable content block that also registers in the right rail. */
 function Doc({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -259,6 +309,135 @@ const PAGES: Page[] = [
           <P>Once you’re in, just talk to it:</P>
           <Code label="chat" code={`sold 3 bags of rice for 4500 each\nMusa carry 2 crates of coke, e go pay Friday\nI sell a bag of rice for 32,000\nwarn me when milk is below 10`} />
           <P>Then open a <strong>new chat</strong> and ask “how much do I sell rice for?” — it answers from memory, even though you never said it in that thread.</P>
+        </Doc>
+      </>
+    ),
+  },
+  {
+    id: 'walkthrough',
+    group: 'See it work',
+    label: 'Live walkthrough',
+    kicker: 'See it work',
+    title: 'A live walkthrough',
+    lead: 'Follow one shop from sign-up to a living picture of the business — all in a single sitting. The owner just talks; Kredex keeps the books, reads receipts, sends invoices, scouts opportunities, and remembers across every conversation. Every screenshot below is real.',
+    toc: [
+      { id: 'w-signup', title: 'Sign up & get in' },
+      { id: 'w-stock', title: 'Stock the shelves' },
+      { id: 'w-selling', title: 'Sell — cash & credit' },
+      { id: 'w-expenses', title: 'Log the costs' },
+      { id: 'w-questions', title: 'Ask about the shop' },
+      { id: 'w-receipt', title: 'Snap a receipt' },
+      { id: 'w-invoices', title: 'Send an invoice' },
+      { id: 'w-reminders', title: 'Reminders & alerts' },
+      { id: 'w-memory', title: 'It remembers across chats' },
+      { id: 'w-opportunities', title: 'Opportunity Scout' },
+      { id: 'w-money', title: 'Is it making money?' },
+    ],
+    body: (
+      <>
+        <Doc id="w-signup" title="Sign up and get in">
+          <P>It starts the way any owner would start — on the website, with no account and nothing logged.</P>
+          <Do>Go to <K>kredex.xyz</K>.</Do>
+          <Shot slot="01-landing" caption="Where it begins — kredex.xyz" />
+          <Do>Click <strong>Start free</strong>.</Do>
+          <Shot slot="02-signup" caption="One short form — shop name, email, password" />
+          <Do>Enter your shop’s details and create the account — you land straight in.</Do>
+          <Shot slot="03-dashboard-empty" caption="Day one — an empty ledger, waiting" />
+        </Doc>
+
+        <Doc id="w-stock" title="Stock the shelves">
+          <P>Everything is run from <strong>Chat</strong>. The owner just says what’s in stock — cost, selling price, and when to warn about running low. No forms, no columns; just sentences.</P>
+          <Do>Open <strong>Chat</strong> from the sidebar.</Do>
+          <Say>Add 20 bags of rice. I buy each at 28,000 and sell at 34,000. Warn me when rice drops below 5 bags.</Say>
+          <Say>Add 15 cartons of Peak milk, cost 5,500 each, selling at 7,000. Alert me below 10 cartons.</Say>
+          <Say>Add 30 loaves of bread at 800 cost, 1,200 selling price. Low-stock warning at 8.</Say>
+          <Say>Log 12 bags of sugar, bought at 1,500, sold at 2,200. Warn me under 10.</Say>
+          <Shot slot="04-stock-confirm" caption="Four sentences in — Kredex has priced the shelves and set every reorder alert" />
+        </Doc>
+
+        <Doc id="w-selling" title="Sell — cash and credit">
+          <P>Selling works the same way: say what left the shop and how it was paid. Kredex logs the sale, counts the money, and quietly draws down the stock.</P>
+          <Say>Sold 4 bags of rice today, cash.</Say>
+          <Shot slot="05-sale-cash" caption="A cash sale — total counted, stock reduced" />
+          <Say>Sold 6 cartons of milk and 10 loaves of bread, paid by transfer.</Say>
+          <Shot slot="06-sale-lowstock" caption="It sells and watches stock at once — milk trips its low-stock line" />
+          <Say>Amaka took 3 bags of rice on credit, she’ll pay next Friday.</Say>
+          <Shot slot="07-credit-sale" caption="Credit recorded, with a due date" />
+          <Say>Amaka just paid 50,000 toward her debt.</Say>
+          <Shot slot="08-payment" caption="Payment applied; her balance updates" />
+        </Doc>
+
+        <Doc id="w-expenses" title="Log the running costs">
+          <P>Money going out matters as much as money coming in — so rent, transport, and the rest go in exactly the same way.</P>
+          <Say>I paid 15,000 for shop rent today.</Say>
+          <Say>Add 5,000 for transport to the market.</Say>
+          <Shot slot="09-expenses" caption="Expenses logged — rent and transport now count against the day" />
+        </Doc>
+
+        <Doc id="w-questions" title="Ask about the shop">
+          <P>Now the ledger can answer. Ask in plain words — no menus, no reports to build.</P>
+          <Say>What’s in stock right now?</Say>
+          <Shot slot="10-in-stock" caption="The whole shelf, with current counts" />
+          <Say>What’s low and needs restocking?</Say>
+          <Shot slot="11-low-stock" caption="Exactly what’s crossed its reorder line" />
+          <Say>Who owes me money?</Say>
+          <Shot slot="12-debts" caption="Every open debt, in one answer" />
+          <Say>Give me today’s summary.</Say>
+          <Shot slot="13-summary" caption="Sales, costs, and debts — the whole day at a glance" />
+        </Doc>
+
+        <Doc id="w-receipt" title="Snap a receipt — or just talk">
+          <P>Not everything gets typed. Photograph a supplier receipt and Kredex reads the items off it; or log a sale with your voice while your hands are full.</P>
+          <Do>Tap the attach icon and upload a photo of a supplier receipt.</Do>
+          <Shot slot="14-receipt-ocr" caption="A photo in — Kredex reads the items and amounts back out" />
+          <Do>Tap the microphone and say: “Sold two bags of sugar for cash.”</Do>
+          <Shot slot="15-voice" caption="Hands full? Just talk to it" />
+        </Doc>
+
+        <Doc id="w-invoices" title="Send an invoice">
+          <P>When a customer needs something formal, a single sentence produces a numbered, downloadable invoice.</P>
+          <Say>Create an invoice for Amaka for 2 bags of rice.</Say>
+          <Shot slot="16-invoice" caption="A numbered invoice, from one line" />
+          <Do>Open the <strong>Invoices</strong> page and download the PDF.</Do>
+          <Shot slot="17-invoice-pdf" caption="A clean, professional PDF — ready to send" />
+        </Doc>
+
+        <Doc id="w-reminders" title="Reminders and alerts">
+          <P>Kredex also remembers to nudge you — reminders you set, alongside the low-stock alerts it raised on its own while stocking.</P>
+          <Say>Remind me to call my rice supplier on Monday to restock.</Say>
+          <Shot slot="18-reminder" caption="Set — and it will surface when it’s due" />
+          <Do>Open the notifications bell.</Do>
+          <Shot slot="19-notifications" caption="Reminders and low-stock alerts, gathered in one place" />
+        </Doc>
+
+        <Doc id="w-memory" title="It remembers — across every chat">
+          <P>This is the part that matters. Everything above happened in one conversation. Now start a <em>completely fresh</em> chat — no history, no scroll-back — and Kredex still knows the shop, because memory is stored for the business, not the thread.</P>
+          <Do>Click <strong>New chat</strong> to open an empty thread.</Do>
+          <Say>How much do I sell a bag of rice for?</Say>
+          <Shot slot="20-cross-session" caption="A brand-new chat with zero history — and it answers ₦34,000, from what it learned earlier" star />
+          <Say>When does Amaka usually pay?</Say>
+          <Shot slot="21-recall-customer" caption="It even recalls the customer’s habit — Friday" />
+          <P>And when the truth changes, correct it once and it’s corrected everywhere.</P>
+          <Say>I’ve increased rice — it’s now 36,000 per bag.</Say>
+          <Do>Open the <strong>Memory</strong> tab.</Do>
+          <Shot slot="22-memory-tab" caption="Two tiers, made visible — exact facts and narrative memories" />
+          <Shot slot="23-overwrite-badge" caption="Rice now reads ₦36,000, marked “overwritten” — the old price kept in history" />
+        </Doc>
+
+        <Doc id="w-opportunities" title="Look outward — Opportunity Scout">
+          <P>Kredex doesn’t only look inward at your books. Tell it where you trade, and it scouts grants, loans, and programs your shop could actually apply for.</P>
+          <Do>Open <strong>Settings</strong> and set your shop’s location.</Do>
+          <Shot slot="24-settings-location" caption="Set your location once — it grounds the search" />
+          <Do>Open <strong>Opportunity Scout</strong> and run a scan.</Do>
+          <Shot slot="25-opportunities" caption="Grants and programs, matched to your shop and region" />
+        </Doc>
+
+        <Doc id="w-money" title="So… is it making money?">
+          <P>One last question — the only one that really counts.</P>
+          <Say>Am I making money this month?</Say>
+          <Shot slot="26-pnl" caption="Profit and loss, in plain English — not a spreadsheet" />
+          <Do>Return to the <strong>Dashboard</strong>.</Do>
+          <Shot slot="27-dashboard-full" caption="From an empty ledger to a living picture of the business — in one sitting" />
         </Doc>
       </>
     ),
@@ -618,7 +797,7 @@ customer.tunde.pays_on    -> "Friday"`}
 /*  Shell                                                              */
 /* ------------------------------------------------------------------ */
 
-const GROUP_ORDER = ['Getting started', 'Core concepts', 'The memory engine', 'MCP & integrations', 'Reference']
+const GROUP_ORDER = ['Getting started', 'See it work', 'Core concepts', 'The memory engine', 'MCP & integrations', 'Reference']
 
 export default function Docs() {
   const [activeId, setActiveId] = useState(() => {
