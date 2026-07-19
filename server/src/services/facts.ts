@@ -137,8 +137,17 @@ function extractJson(text: string): any {
   return JSON.parse(t.slice(a, b + 1));
 }
 
-/** Extract structured facts from a turn and upsert them. Safe to fire-and-forget. */
-export async function rememberFactsFromTurn(shopId: string, userMsg: string, assistantMsg = ""): Promise<void> {
+/**
+ * Extract structured facts from a turn and upsert them. Safe to fire-and-forget.
+ *
+ * IMPORTANT: we canonicalize ONLY the owner's own message — never Kredex's reply.
+ * Facts are the owner's ground truth; feeding the assistant's text back in let its
+ * guesses launder into stored facts (e.g. a hallucinated "Amaka pays on Wednesdays"
+ * being saved as customer.amaka.pays_on), and confused the model into emitting
+ * malformed JSON that silently dropped real updates like a new selling price. The
+ * `_assistantMsg` param is kept for call-site compatibility but intentionally unused.
+ */
+export async function rememberFactsFromTurn(shopId: string, userMsg: string, _assistantMsg = ""): Promise<void> {
   try {
     const res = await qwen.chat.completions.create({
       model: MODELS.agent,
@@ -146,7 +155,7 @@ export async function rememberFactsFromTurn(shopId: string, userMsg: string, ass
       max_tokens: 300,
       messages: [
         { role: "system", content: CANON_SYS },
-        { role: "user", content: `Owner said: ${userMsg}\nKredex replied: ${assistantMsg}`.slice(0, 2000) },
+        { role: "user", content: `Owner said: ${userMsg}`.slice(0, 2000) },
       ],
     });
     const parsed = extractJson(res.choices[0]?.message?.content ?? "");

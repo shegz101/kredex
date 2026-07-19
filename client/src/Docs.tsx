@@ -3,6 +3,34 @@ import { Icon } from '@iconify/react'
 import { Link } from 'react-router-dom'
 import KredexMark from './components/KredexMark'
 
+// Walkthrough screenshots (real captures from a live kredex.xyz session).
+import shotLanding from './assets/walkthrough/01-landing.png'
+import shotSignup from './assets/walkthrough/02-signup.png'
+import shotDashboardEmpty from './assets/walkthrough/03-dashboard-empty.png'
+import shotStockRice from './assets/walkthrough/04-stock-rice.png'
+import shotStockMilk from './assets/walkthrough/04-stock-milk.png'
+import shotStockBread from './assets/walkthrough/04-stock-bread.png'
+import shotStockSugar from './assets/walkthrough/04-stock-sugar.png'
+import shotSaleCash from './assets/walkthrough/05-sale-cash.png'
+import shotSaleLowStock from './assets/walkthrough/06-sale-lowstock.png'
+import shotCreditSale from './assets/walkthrough/07-credit-sale.png'
+import shotPayment from './assets/walkthrough/08-payment.png'
+import shotExpenses from './assets/walkthrough/09-expenses.png'
+import shotInStock from './assets/walkthrough/10-in-stock.png'
+import shotLowStock from './assets/walkthrough/11-low-stock.png'
+import shotDebts from './assets/walkthrough/12-debts.png'
+import shotSummary from './assets/walkthrough/13-summary.png'
+import shotReceiptOcr from './assets/walkthrough/14-receipt-ocr.png'
+import shotInvoice from './assets/walkthrough/16-invoice.png'
+import shotInvoicePdf from './assets/walkthrough/17-invoice-pdf.png'
+import shotReminder from './assets/walkthrough/18-reminder.png'
+import shotNotifications from './assets/walkthrough/19-notifications.png'
+import shotCrossSession from './assets/walkthrough/20-cross-session.png'
+import shotMemoryTab from './assets/walkthrough/22-memory-tab.png'
+import shotSettingsLocation from './assets/walkthrough/24-settings-location.png'
+import shotPnl from './assets/walkthrough/26-pnl.png'
+import shotDashboardFull from './assets/walkthrough/27-dashboard-full.png'
+
 /*
  * Docs — "The Kredex Ledger Manual".
  * A three-column documentation site (left grouped nav · center content · right
@@ -147,7 +175,36 @@ function Table({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
 
 /** Screenshots for the walkthrough — filled in as they arrive (slot → imported asset). */
 const SHOTS: Record<string, string> = {
-  // e.g. '01-dashboard-empty': dashboardEmptyPng   (import the asset at the top of the file, then map it here)
+  '01-landing': shotLanding,
+  '02-signup': shotSignup,
+  '03-dashboard-empty': shotDashboardEmpty,
+  '04-stock-rice': shotStockRice,
+  '04-stock-milk': shotStockMilk,
+  '04-stock-bread': shotStockBread,
+  '04-stock-sugar': shotStockSugar,
+  '05-sale-cash': shotSaleCash,
+  '06-sale-lowstock': shotSaleLowStock,
+  '07-credit-sale': shotCreditSale,
+  '08-payment': shotPayment,
+  '09-expenses': shotExpenses,
+  '10-in-stock': shotInStock,
+  '11-low-stock': shotLowStock,
+  '12-debts': shotDebts,
+  '13-summary': shotSummary,
+  '14-receipt-ocr': shotReceiptOcr,
+  // '15-voice': needs a fresh capture (voice logging)
+  '16-invoice': shotInvoice,
+  '17-invoice-pdf': shotInvoicePdf,
+  '18-reminder': shotReminder,
+  '19-notifications': shotNotifications,
+  '20-cross-session': shotCrossSession,
+  // '21-recall-customer': blocked by fact-laundering bug — re-shoot after fix
+  '22-memory-tab': shotMemoryTab,
+  // '23-overwrite-badge': blocked by price-overwrite persistence bug — re-shoot after fix
+  '24-settings-location': shotSettingsLocation,
+  // '25-opportunities': blocked by empty-results bug — re-shoot after fix
+  '26-pnl': shotPnl,
+  '27-dashboard-full': shotDashboardFull,
 }
 
 /** A message the shop owner types into Kredex. */
@@ -349,10 +406,13 @@ const PAGES: Page[] = [
           <P>Everything is run from <strong>Chat</strong>. The owner just says what’s in stock — cost, selling price, and when to warn about running low. No forms, no columns; just sentences.</P>
           <Do>Open <strong>Chat</strong> from the sidebar.</Do>
           <Say>Add 20 bags of rice. I buy each at 28,000 and sell at 34,000. Warn me when rice drops below 5 bags.</Say>
+          <Shot slot="04-stock-rice" caption="Rice logged — cost, selling price, and a reorder alert at 5 bags" />
           <Say>Add 15 cartons of Peak milk, cost 5,500 each, selling at 7,000. Alert me below 10 cartons.</Say>
+          <Shot slot="04-stock-milk" caption="Milk added — its own alert set at 10 cartons" />
           <Say>Add 30 loaves of bread at 800 cost, 1,200 selling price. Low-stock warning at 8.</Say>
+          <Shot slot="04-stock-bread" caption="Bread on the shelf, warning line at 8 loaves" />
           <Say>Log 12 bags of sugar, bought at 1,500, sold at 2,200. Warn me under 10.</Say>
-          <Shot slot="04-stock-confirm" caption="Four sentences in — Kredex has priced the shelves and set every reorder alert" />
+          <Shot slot="04-stock-sugar" caption="Sugar in — four sentences, four priced items, every reorder alert set" />
         </Doc>
 
         <Doc id="w-selling" title="Sell — cash and credit">
@@ -386,17 +446,15 @@ const PAGES: Page[] = [
           <Shot slot="13-summary" caption="Sales, costs, and debts — the whole day at a glance" />
         </Doc>
 
-        <Doc id="w-receipt" title="Snap a receipt — or just talk">
-          <P>Not everything gets typed. Photograph a supplier receipt and Kredex reads the items off it; or log a sale with your voice while your hands are full.</P>
+        <Doc id="w-receipt" title="Snap a receipt">
+          <P>Not everything gets typed. Photograph a supplier receipt and Kredex reads the items and amounts straight off it.</P>
           <Do>Tap the attach icon and upload a photo of a supplier receipt.</Do>
           <Shot slot="14-receipt-ocr" caption="A photo in — Kredex reads the items and amounts back out" />
-          <Do>Tap the microphone and say: “Sold two bags of sugar for cash.”</Do>
-          <Shot slot="15-voice" caption="Hands full? Just talk to it" />
         </Doc>
 
         <Doc id="w-invoices" title="Send an invoice">
           <P>When a customer needs something formal, a single sentence produces a numbered, downloadable invoice.</P>
-          <Say>Create an invoice for Amaka for 2 bags of rice.</Say>
+          <Say>Create an invoice for Mr. Tunde for 2 bags of rice.</Say>
           <Shot slot="16-invoice" caption="A numbered invoice, from one line" />
           <Do>Open the <strong>Invoices</strong> page and download the PDF.</Do>
           <Shot slot="17-invoice-pdf" caption="A clean, professional PDF — ready to send" />

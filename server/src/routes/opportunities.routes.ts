@@ -74,7 +74,11 @@ Rules:
         { role: "system", content: "You are a precise, honest SME funding and opportunity scout with live web access. Search the web, then output strict JSON with real source URLs, no commentary." },
         { role: "user", content: prompt },
       ],
-    } as any);
+      // A forced web search + a full JSON list routinely takes ~50s — well past the
+      // client's default 30s/2-retry cap, which was silently timing the scout out and
+      // returning nothing. Give this one slow call room, and don't retry (a retry just
+      // burns another minute). Results are cached for 10 min so the wait is paid once.
+    } as any, { timeout: 90_000, maxRetries: 0 });
 
     const raw = completion.choices[0]?.message?.content?.toString() ?? "";
     let data: any;
