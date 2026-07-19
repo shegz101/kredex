@@ -139,6 +139,28 @@ function Code({ label = 'shell', code }: { label?: string; code: string }) {
   )
 }
 
+/** One request→response exchange in the MCP walkthrough: the client calls a tool,
+ *  the server answers. `kind` tints read vs. write so overwrites stand out. */
+function McpTurn({ n, call, note, response, kind = 'read' }: { n: number; call: string; note?: string; response: string; kind?: 'read' | 'write' }) {
+  return (
+    <div className="overflow-hidden rounded-[10px] border-2 border-[#2A2622] shadow-[4px_5px_0_rgba(42,38,34,0.10)]">
+      <div className="flex items-center gap-2 bg-[#2A2622] px-3 py-2">
+        <Mono className="text-[9px] text-[#F4ECDC]/45">{String(n).padStart(2, '0')}</Mono>
+        <Icon icon={kind === 'write' ? 'solar:pen-new-square-linear' : 'solar:magnifer-linear'} width="13" style={{ color: kind === 'write' ? '#E3A63C' : '#8A9A5B' }} />
+        <span style={{ fontFamily: MONO }} className="text-[11.5px] text-[#EDE4D2]">{call}</span>
+      </div>
+      {note && (
+        <div className="border-b border-[#2A2622]/10 bg-[#F8F2E4] px-3 py-1.5 text-[12.5px] italic text-[#2A2622]/70" style={{ fontFamily: DISPLAY }}>
+          {note}
+        </div>
+      )}
+      <pre style={{ fontFamily: MONO }} className="overflow-x-auto bg-[#221E1B] px-4 py-3 text-[12px] leading-[1.6] text-[#EDE4D2]">
+        <code>{response}</code>
+      </pre>
+    </div>
+  )
+}
+
 function Stat({ big, label }: { big: string; label: string }) {
   return (
     <div className="rounded-[10px] border-2 border-[#2A2622] bg-[#F8F2E4] p-4 text-center">
@@ -700,6 +722,7 @@ customer.tunde.pays_on    -> "Friday"`}
       { id: 'the-tools', title: 'The tools' },
       { id: 'run-mcp', title: 'Run it' },
       { id: 'wire-mcp', title: 'Wire into a client' },
+      { id: 'see-mcp', title: 'See it work — a live session' },
     ],
     body: (
       <>
@@ -749,6 +772,74 @@ customer.tunde.pays_on    -> "Friday"`}
           <Note kind="tip" title="Try it">
             Ask the client “what do I sell rice for?” — it calls <K>recall_facts</K> over MCP and answers from the trie.
             Say “rice is now 40,000” and it calls <K>remember_fact</K>, overwriting the value for every future recall.
+          </Note>
+        </Doc>
+        <Doc id="see-mcp" title="See it work — a live session">
+          <P>
+            Here is an <em>actual</em> session: a generic MCP client (the same handshake Claude Desktop performs)
+            spawns the server over stdio and calls its tools. No Kredex UI involved — just the protocol.
+          </P>
+          <McpTurn
+            n={1}
+            kind="read"
+            call="→ tools/list"
+            note="What the server advertises — 6 memory tools + 11 bookkeeping tools, from one registry."
+            response={`17 tools:
+  recall_facts   remember_fact   list_facts
+  recall_memories   remember   list_memories
+  log_stock  record_sale  record_credit_sale
+  record_payment  query_debts  query_stock
+  daily_summary  record_expense  create_invoice
+  save_customer_phone  set_reminder`}
+          />
+          <McpTurn
+            n={2}
+            kind="read"
+            call={`→ recall_facts { query: "rice price" }`}
+            note="Tier 1 — a deterministic trie read."
+            response={`{
+  "facts": [
+    { "key": "product.rice.sell_price", "value": 34000, "unit": "NGN" },
+    { "key": "product.rice.cost_price", "value": 28000, "unit": "NGN" }
+  ]
+}`}
+          />
+          <McpTurn
+            n={3}
+            kind="write"
+            call={`→ remember_fact { key: "product.rice.sell_price", value: 40000 }`}
+            note="An external agent overwrites the price — same canonical key, new value."
+            response={`{ "ok": true, "stored": "product.rice.sell_price" }`}
+          />
+          <McpTurn
+            n={4}
+            kind="read"
+            call={`→ recall_facts { query: "rice price" }`}
+            note="The overwrite persisted — every future recall, in any client, now reads ₦40,000."
+            response={`{
+  "facts": [
+    { "key": "product.rice.sell_price", "value": 40000, "unit": "NGN" },
+    { "key": "product.rice.cost_price", "value": 28000, "unit": "NGN" }
+  ]
+}`}
+          />
+          <McpTurn
+            n={5}
+            kind="read"
+            call={`→ recall_memories { query: "how does Tunde pay?" }`}
+            note="Tier 2 — semantic recall, not keyword match; scored by relevance × importance × recency."
+            response={`{
+  "memories": [
+    "Tunde has never defaulted on payments.",
+    "Tunde buys on credit and settles at the end of every month.",
+    "Tunde's contact number is 0803 555 1212."
+  ]
+}`}
+          />
+          <Note kind="warn" title="One protocol gotcha">
+            MCP speaks JSON-RPC over <K>stdout</K>, so nothing else may touch it. A single stray{' '}
+            <K>console.log</K> at startup (e.g. a “MongoDB connected” line) corrupts the stream and hangs the
+            client — all diagnostic logging goes to <K>stderr</K> instead.
           </Note>
         </Doc>
       </>

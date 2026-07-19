@@ -12,8 +12,12 @@ import { env } from "../config/env.js";
 export async function connectDB(): Promise<void> {
   mongoose.set("strictQuery", true);
 
+  // NOTE: log to stderr, not stdout. The MCP server (src/mcp/server.ts) speaks
+  // JSON-RPC over stdout, and connectDB() runs before that transport is attached —
+  // a stray stdout line here corrupts the protocol stream and hangs the client.
+  // stderr is the correct channel for lifecycle logs anyway; harmless for the HTTP server.
   mongoose.connection.on("connected", () =>
-    console.log("✅ MongoDB connected")
+    console.error("✅ MongoDB connected")
   );
   mongoose.connection.on("error", (err) =>
     console.error("❌ MongoDB error:", err.message)
