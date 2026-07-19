@@ -20,6 +20,7 @@ import shotInStock from './assets/walkthrough/10-in-stock.png'
 import shotLowStock from './assets/walkthrough/11-low-stock.png'
 import shotDebts from './assets/walkthrough/12-debts.png'
 import shotSummary from './assets/walkthrough/13-summary.png'
+import shotReceiptUpload from './assets/walkthrough/14-receipt-upload.png'
 import shotReceiptOcr from './assets/walkthrough/14-receipt-ocr.png'
 import shotInvoice from './assets/walkthrough/16-invoice.png'
 import shotInvoicePdf from './assets/walkthrough/17-invoice-pdf.png'
@@ -27,7 +28,10 @@ import shotReminder from './assets/walkthrough/18-reminder.png'
 import shotNotifications from './assets/walkthrough/19-notifications.png'
 import shotCrossSession from './assets/walkthrough/20-cross-session.png'
 import shotMemoryTab from './assets/walkthrough/22-memory-tab.png'
+import shotOverwriteBadge from './assets/walkthrough/23-overwrite-badge.png'
 import shotSettingsLocation from './assets/walkthrough/24-settings-location.png'
+import shotOpportunities from './assets/walkthrough/25-opportunities.png'
+import shotOpportunitiesMore from './assets/walkthrough/25-opportunities-more.png'
 import shotPnl from './assets/walkthrough/26-pnl.png'
 import shotDashboardFull from './assets/walkthrough/27-dashboard-full.png'
 
@@ -191,6 +195,7 @@ const SHOTS: Record<string, string> = {
   '11-low-stock': shotLowStock,
   '12-debts': shotDebts,
   '13-summary': shotSummary,
+  '14-receipt-upload': shotReceiptUpload,
   '14-receipt-ocr': shotReceiptOcr,
   // '15-voice': needs a fresh capture (voice logging)
   '16-invoice': shotInvoice,
@@ -198,11 +203,11 @@ const SHOTS: Record<string, string> = {
   '18-reminder': shotReminder,
   '19-notifications': shotNotifications,
   '20-cross-session': shotCrossSession,
-  // '21-recall-customer': blocked by fact-laundering bug — re-shoot after fix
   '22-memory-tab': shotMemoryTab,
-  // '23-overwrite-badge': blocked by price-overwrite persistence bug — re-shoot after fix
+  '23-overwrite-badge': shotOverwriteBadge,
   '24-settings-location': shotSettingsLocation,
-  // '25-opportunities': blocked by empty-results bug — re-shoot after fix
+  '25-opportunities': shotOpportunities,
+  '25-opportunities-more': shotOpportunitiesMore,
   '26-pnl': shotPnl,
   '27-dashboard-full': shotDashboardFull,
 }
@@ -449,7 +454,8 @@ const PAGES: Page[] = [
         <Doc id="w-receipt" title="Snap a receipt">
           <P>Not everything gets typed. Photograph a supplier receipt and Kredex reads the items and amounts straight off it.</P>
           <Do>Tap the attach icon and upload a photo of a supplier receipt.</Do>
-          <Shot slot="14-receipt-ocr" caption="A photo in — Kredex reads the items and amounts back out" />
+          <Shot slot="14-receipt-upload" caption="The receipt, straight from the counter" />
+          <Shot slot="14-receipt-ocr" caption="Kredex reads the items and amounts back out — ready to log to stock" />
         </Doc>
 
         <Doc id="w-invoices" title="Send an invoice">
@@ -473,8 +479,6 @@ const PAGES: Page[] = [
           <Do>Click <strong>New chat</strong> to open an empty thread.</Do>
           <Say>How much do I sell a bag of rice for?</Say>
           <Shot slot="20-cross-session" caption="A brand-new chat with zero history — and it answers ₦34,000, from what it learned earlier" star />
-          <Say>When does Amaka usually pay?</Say>
-          <Shot slot="21-recall-customer" caption="It even recalls the customer’s habit — Friday" />
           <P>And when the truth changes, correct it once and it’s corrected everywhere.</P>
           <Say>I’ve increased rice — it’s now 36,000 per bag.</Say>
           <Do>Open the <strong>Memory</strong> tab.</Do>
@@ -488,6 +492,7 @@ const PAGES: Page[] = [
           <Shot slot="24-settings-location" caption="Set your location once — it grounds the search" />
           <Do>Open <strong>Opportunity Scout</strong> and run a scan.</Do>
           <Shot slot="25-opportunities" caption="Grants and programs, matched to your shop and region" />
+          <Shot slot="25-opportunities-more" caption="Real, current programs — each with who qualifies, the deadline, and a link to the source" />
         </Doc>
 
         <Doc id="w-money" title="So… is it making money?">
