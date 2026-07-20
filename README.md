@@ -28,7 +28,7 @@ Built for the **Global AI Hackathon Series with Qwen Cloud** — **MemoryAgent**
 - 📖 **Docs** — https://kredex.xyz/docs
 - ☁️ **On Alibaba Cloud** — http://8.222.241.247 (Simple Application Server, Singapore)
 - 🐦 **Twitter / X** — https://x.com/getkredex
-- 🎥 **Demo video** — _add link before submission_
+- 🎥 **Demo video** — https://youtu.be/DJKaI3UKsQY
 - 🗺️ **Architecture** — see [Architecture](#architecture) below
 - 💻 **Repo** — https://github.com/shegz101/kredex
 
